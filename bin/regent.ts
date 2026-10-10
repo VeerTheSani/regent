@@ -14,10 +14,10 @@ const program = new Command();
 program.name("regent").description("Autonomous local orchestrator daemon and CLI").version("0.0.0");
 
 program
-  .command("job")
+  .command("job [goal...]")
   .description("Submit and run an autonomous job")
-  .argument("<goal>", "Plain-language goal for Regent to execute")
-  .action(async (goal: string) => {
+  .action(async (goalParts: string[] | string) => {
+    const goal = Array.isArray(goalParts) ? goalParts.join(" ") : String(goalParts || "");
     await handleJobCommand(goal);
   });
 
@@ -121,4 +121,29 @@ program.argument("[query...]", "Chat query or question").action(async (queryPart
   }
 });
 
-program.parse(process.argv);
+program.exitOverride();
+
+async function main() {
+  try {
+    await program.parseAsync(process.argv);
+  } catch (err: unknown) {
+    const rawArgs = process.argv.slice(2);
+    if (
+      rawArgs.length === 0 ||
+      rawArgs.includes("-h") ||
+      rawArgs.includes("--help") ||
+      rawArgs.includes("-V") ||
+      rawArgs.includes("--version")
+    ) {
+      return;
+    }
+
+    const cleanInput = rawArgs.join(" ").replace(/^job\s+/i, "");
+    console.log(`\n⚡ Agent-to-Agent Recovery: Routing "${cleanInput}" to Hermes Agent...`);
+    const { runHermesTask } = await import("../src/operator/chat.js");
+    const result = await runHermesTask(cleanInput);
+    console.log(`\n✅ Completed via Hermes Agent:\n${result}\n`);
+  }
+}
+
+main().catch(console.error);

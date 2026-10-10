@@ -182,12 +182,24 @@ export class ChromeBrowserDriver {
   }
 
   /**
-   * Closes browser context and handles.
+   * Closes browser context and handles cleanly without hanging.
    */
   async close(): Promise<void> {
     try {
-      if (this.context) await this.context.close();
-      if (this.browser) await this.browser.close();
+      if (this.context) {
+        for (const p of this.context.pages()) {
+          try {
+            await p.close();
+          } catch {}
+        }
+        await this.context.close();
+      }
+      if (this.browser?.isConnected()) {
+        await Promise.race([
+          this.browser.close(),
+          new Promise<void>((r) => setTimeout(r, 1000)),
+        ]);
+      }
     } catch {}
     this.context = null;
     this.browser = null;

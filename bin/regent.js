@@ -3,20 +3,18 @@
  * bin/regent.js
  *
  * Global CLI Launcher for Regent.
- * Resolves the absolute path to regent.ts and executes via tsx,
- * allowing 'regent' commands to run from ANY directory on Windows.
+ * Uses cross-spawn to resolve Windows wrappers safely without shell quote-stripping.
  */
 
-import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import spawn from "cross-spawn";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const regentTs = join(__dirname, "regent.ts");
 
 const child = spawn("npx", ["tsx", regentTs, ...process.argv.slice(2)], {
   stdio: "inherit",
-  shell: true,
 });
 
 child.on("close", (code) => {

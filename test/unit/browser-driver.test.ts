@@ -38,8 +38,10 @@ describe("Live Chrome & Media Operator", () => {
   });
 
   afterAll(async () => {
-    await driver.close();
-    server.close();
+    try {
+      await driver.close();
+    } catch {}
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   it("navigates to URL and extracts DOM text", async () => {
