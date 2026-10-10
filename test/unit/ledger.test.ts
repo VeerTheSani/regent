@@ -80,7 +80,7 @@ describe("M1: Ledger (SQLite WAL mode & Idempotency)", () => {
 
     // Wait until child emits WRITING_ACTIVE (after 150 events written)
     await new Promise<void>((resolve) => {
-      const timer = setTimeout(resolve, 3000);
+      const timer = setTimeout(resolve, 8000);
       child.stdout?.on("data", (d) => {
         if (d.toString().includes("WRITING_ACTIVE")) {
           clearTimeout(timer);

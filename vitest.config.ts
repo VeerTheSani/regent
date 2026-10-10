@@ -7,5 +7,8 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     exclude: ["node_modules", "dist", "test/fixtures/**/*"],
     testTimeout: 30000,
+    env: {
+      REGENT_HEADLESS: "1",
+    },
   },
 });
