@@ -143,3 +143,12 @@
 
 ### D29: Browser Form T1 Classification & Security
 - **Decision**: Browser worker inspects form field semantics (`password`, `cvc`, `terms`) and classifies form kinds (`login`, `payment`, `account`, `legal`). `browser.submit` on `login` forms fails closed to `A3 needs_grant`.
+
+## M9: Delivery Reporting, Final Acceptance & Retrospective Memory
+
+### D30: Delivery Honesty Rules & Strict Evidence Link Enforcement
+- **Decision**: `generateDeliveryReport()` enforces that any DoD item marked as `verified` or `judged` must provide an explicit non-empty `evidenceLink`, throwing an error otherwise to prevent unverified claims from reaching the operator. Partial deliveries are strictly marked `PARTIAL`.
+
+### D31: Project Profile Storage & Bun Discovery
+- **Observation**: Discovered that Bun `1.4.3` is installed at `C:\Users\sanis\AppData\Local\Microsoft\WinGet\Packages\Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\bun-windows-x64\bun.exe` and on PATH.
+- **Decision**: Authored `~/.regent/memory/projects/aikami.yaml` configured with verified task scripts.

@@ -4,20 +4,25 @@ All notable changes to Regent will be documented in this file.
 
 ## [Unreleased]
 
+### Added - M9: Delivery Reporting, Final Acceptance & Retrospective Memory
+- Implemented `src/reporter/delivery.ts`:
+  - `generateDeliveryReport` rendering complete `DELIVERY.md` per 11 §3.
+  - Enforced strict honesty checks: throws error if any `verified` or `judged` DoD item lacks an `evidenceLink`.
+  - Marks title and status as `PARTIAL` when complete status is not achieved.
+  - Aggregates true costs directly from ledger events.
+- Implemented `src/integrator/final-acceptance.ts`:
+  - Evaluates job against MissionBrief DoD items, issuing `APPROVE` or `REVISE` with blockers.
+- Implemented durable memory system:
+  - `src/memory/stats.ts`: Worker stats tracking with weekly decay factor.
+  - `src/memory/lessons.ts`: Storage and query retrieval of lessons in `~/.regent/memory/lessons.jsonl`.
+  - `src/memory/retrospective.ts`: Automatic extraction of learnings from gate failures and ladder revisions.
+- Authored Aikami project profile at `~/.regent/memory/projects/aikami.yaml`.
+- Acceptance unit tests in `test/unit/delivery.test.ts`, `test/unit/final-acceptance.test.ts`, and `test/unit/retrospective.test.ts` (120 tests passed across 27 test files).
+
 ### Added - M8: Browser Operator, Dashboard & Notification Infrastructure
-- Implemented `src/workers/browser.ts`:
-  - Browser worker adapter using Playwright over CDP (`127.0.0.1:9222`) or headless Chrome launch.
-  - T1 form-kind classifier (`login`, `payment`, `account`, `legal`, `other`).
-  - Charter boundary enforcement on `browser.submit` (login forms fail closed to `A3 needs_grant`).
-- Implemented `src/operator/dashboard/`:
-  - `src/operator/dashboard/server.ts`: Dashboard HTTP server on `127.0.0.1:7780`.
-  - `src/operator/dashboard/sse.ts`: Server-Sent Events (SSE) stream manager (`/api/events`).
-  - `src/operator/dashboard/static/index.html`: Zero-build single static dashboard UI with active jobs table, live event stream, and emergency stop button.
-  - Emergency stop API endpoint (`/api/stop`) engaging the `~/.regent/STOP` sentinel.
-- Implemented `src/operator/notify.ts`:
-  - Hermes messaging integration (`hermes send -t <channel> -q --file -`).
-  - Quiet hours window filtering (`inQuietHours`) and digest queue.
-- Acceptance integration tests in `test/integration/browser-operator.test.ts`, `test/integration/dashboard.test.ts`, and `test/unit/notify.test.ts` (112 tests passed across 24 test files).
+- Implemented `src/workers/browser.ts`: Playwright browser operator with form classification and Charter gating.
+- Implemented dashboard server on port 7780 with SSE stream (`/api/events`), static UI, and emergency stop API (`/api/stop`).
+- Implemented notification dispatcher (`src/operator/notify.ts`) with quiet hours filtering.
 
 ### Added - M7: Operator Onboarding, Diagnostics & Consultant Selection
 - Implemented `src/operator/doctor.ts` (`regent doctor` CLI).
