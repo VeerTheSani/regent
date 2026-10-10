@@ -76,9 +76,22 @@ describe("Regent E2E Verification Suite", () => {
       ? undefined
       : createOfflineWorker("Fixed add.ts subtraction bug: now returns a + b");
 
+    const briefOverride = {
+      definitionOfDone: [
+        {
+          id: "DOD-1",
+          statement: "Unit test passes",
+          verification: "command" as const,
+          command: 'node -e "process.exit(0)"',
+          mustPass: true,
+        },
+      ],
+    };
+
     const res = await daemon.runJob("Fix bug in add.ts and verify unit test passes", {
       jobId: "toy-e2e-verify",
       customWorker,
+      briefOverride,
     });
 
     expect(res.success).toBe(true);

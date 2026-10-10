@@ -21,7 +21,7 @@ Default execution mode runs entirely with local and deterministic simulation eng
 | Run ID | Target Repo | Goal | Live Mode (`REGENT_LIVE`) | Duration | Spent USD | Status |
 |---|---|---|:---:|:---:|:---:|:---:|
 | `toy-e2e-verify` | `test/fixtures/toy-repo` | Fix bug in `add.ts` | 0 (Offline) | 4.2s | $0.0000 | **COMPLETE** |
-| `aikami-e2e-verify` | `C:/Users/sanis/Redeem/aikami` | Analyze repo rules & tests | 0 (Offline) | 3.8s | $0.0000 | **COMPLETE** |
+| `aikami-e2e-verify` | `%USERPROFILE%/Redeem/aikami` | Analyze repo rules & tests | 0 (Offline) | 3.8s | $0.0000 | **COMPLETE** |
 | `job-mv2ijzy4` | `test/fixtures/toy-repo` | Fix bug in `add.ts` | 0 (Offline) | 5.0s | $0.0000 | **COMPLETE** |
 | **Total Cumulative Spend** | — | — | — | — | **$0.0000** | — |
 
@@ -35,6 +35,6 @@ Default execution mode runs entirely with local and deterministic simulation eng
 During the `aikami-e2e-verify` run:
 1. `WorktreeManager` established an isolated branch `regent/aikami-e2e-verify/CTR-01-a1` under `.regent-worktrees/`.
 2. All contract evaluation, analysis, and artifact generation occurred strictly within the isolated worktree directory.
-3. The operator's main repository checkout at `C:/Users/sanis/Redeem/aikami` was monitored via `git status --porcelain` and `git branch --show-current`.
+3. The operator's main repository checkout (`aikami`) was monitored via `git status --porcelain` and `git branch --show-current`.
 4. Zero untracked or modified files were introduced into the operator's working directory.
 5. No remote branches were pushed (`git push` blocked per A4 Charter policy).
