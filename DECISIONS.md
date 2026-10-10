@@ -32,3 +32,26 @@
   - `yaml`: `^2.7.0`
   - `zod`: `^3.24.2`
 - **Why**: Stable, tested versions that avoid breaking changes during active build phases.
+
+## M2: Worker Probes & CLI Ground Truth (P1–P15)
+
+### D5: Hermes stream separation (Spec Correction)
+- **Observation**: Probe P6 revealed that when invoking `hermes chat -Q`, `stdout` emits solely the clean final text response, whereas `session_id: <id>` is written to `stderr`.
+- **Decision**: The Hermes adapter consumes `stdout` directly as `finalText` without requiring regex line-stripping, and parses `session_id` from `stderr`.
+- **Spec Correction**: 05 §4.2 noted that `stdout` contained the final response + session info together; in reality they are cleanly separated across file descriptors.
+
+### D6: Claude Code append system prompt flag
+- **Observation**: Probe P5 verified that `--append-system-prompt-file <path>` is natively supported by Claude Code 2.1.296.
+- **Decision**: Pass system prompts via temporary markdown files (`worker-system.md`) and `--append-system-prompt-file`, avoiding CLI length constraints and Windows shell quoting hazards.
+
+### D7: Claude Code budget exhaustion representation
+- **Observation**: Probe P2 established that budget exhaustion manifests as `result.subtype: "error_max_budget_usd"`, `result.terminal_reason: "budget_exhausted"`, and exit code 1.
+- **Decision**: Claude Code adapter checks both `subtype` and `terminal_reason` for `"budget"` to mark status as `budget_exceeded`.
+
+### D8: Cross-spawn requirement on Windows
+- **Observation**: Running commands like `claude`, `code`, or `npx` via standard `node:child_process.spawn` without shell fails with `ENOENT` due to Windows `.cmd`/`.bat` wrappers.
+- **Decision**: Wrap all child process spawns in `spawnTree` via `cross-spawn` without setting `shell: true`, preserving security while resolving Windows execution shims.
+
+### D9: Hermes Pause Sentinel & Health Detection
+- **Observation**: Probe P9 verified that `hermes pause` creates `~/.hermes/ESTOP` and `hermes status` renders `⏸️  PAUSED (global emergency stop — reason: ...; hermes resume to lift)`.
+- **Decision**: `HermesAdapter.probe()` checks for `PAUSED` in status output to prevent dispatching work to a halted Hermes instance.

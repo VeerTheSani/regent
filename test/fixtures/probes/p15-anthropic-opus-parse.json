@@ -1,0 +1,20 @@
+{
+  "gated": true,
+  "reason": "REGENT_LIVE is 0 or ANTHROPIC_API_KEY not set in env",
+  "sdk_version": "@anthropic-ai/sdk ^0.39.0",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "verdict": {
+        "type": "string",
+        "enum": [
+          "APPROVE",
+          "REVISE"
+        ]
+      },
+      "confidence": {
+        "type": "number"
+      }
+    }
+  }
+}

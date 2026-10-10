@@ -1,0 +1,11 @@
+{
+  "command": "rm -rf /",
+  "env_type": "local",
+  "verdict": "hardline-deny",
+  "exit_code": 3,
+  "rule": "recursive delete of root filesystem",
+  "detail": "matches the hardline blocklist (never bypassable, blocked even under --yolo / approvals.mode=off)",
+  "normalized_variants": [
+    "rm -rf /"
+  ]
+}

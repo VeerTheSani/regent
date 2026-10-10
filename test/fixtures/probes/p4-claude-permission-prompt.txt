@@ -1,0 +1,2 @@
+--permission-prompt-tool supported: true
+--permission-prompts supported: true
