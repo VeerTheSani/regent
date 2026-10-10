@@ -55,3 +55,16 @@
 ### D9: Hermes Pause Sentinel & Health Detection
 - **Observation**: Probe P9 verified that `hermes pause` creates `~/.hermes/ESTOP` and `hermes status` renders `⏸️  PAUSED (global emergency stop — reason: ...; hermes resume to lift)`.
 - **Decision**: `HermesAdapter.probe()` checks for `PAUSED` in status output to prevent dispatching work to a halted Hermes instance.
+
+## M1: Kernel Architecture (Ledger, Reducers, Charter & Budget)
+
+### D10: Native node:sqlite in WAL mode
+- **Decision**: Used Node 24's built-in `node:sqlite` (`DatabaseSync`) configured with `PRAGMA journal_mode = WAL` and `PRAGMA synchronous = NORMAL`.
+- **Why**: Zero external native compilation on Windows, robust crash recovery, contiguous auto-incrementing sequences, and thread-safe WAL reads. Filtered `ExperimentalWarning` cleanly at the process warning boundary.
+
+### D11: Fail-closed Charter Engine with Taint Detection
+- **Decision**: Rules are ordered with first-match-wins semantics. Any unknown action defaults to `A3` (fail closed, requiring an operator grant). Tainted `A2` actions automatically require an operator grant. The `KillSwitch` sentinel (`~/.regent/STOP`) immediately overrides all actions with `AX deny`.
+
+### D12: Pure State Machine Reducers & Deterministic Projections
+- **Decision**: Implemented `reduceContract` and `reduceJob` as pure functions without side effects. Side effects are executed via `EffectBus` using idempotent keys (`idem_key`).
+- **Why**: Allows deterministic projection replaying from the append-only event ledger and reliable recovery on crash or restart.
