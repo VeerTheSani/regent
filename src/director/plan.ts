@@ -59,7 +59,7 @@ export function generatePlan(
         workerPreference: ["hermes", "shell"],
         risk: "medium",
         budget: {
-          maxUsd: brief.budget.maxUsd,
+          maxUsd: brief.budget.maxUsd * 0.6,
           maxAttempts: 6,
           maxMinutesPerAttempt: 30,
         },

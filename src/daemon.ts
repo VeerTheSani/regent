@@ -166,6 +166,7 @@ export class RegentDaemon {
     jobId: string;
     success: boolean;
     spentUsd: number;
+    error?: string;
   }> {
     const jobId = options.jobId ?? `job-${Date.now().toString(36)}`;
     const probe = await probeWorkspace(this.repoRoot);
@@ -207,7 +208,12 @@ export class RegentDaemon {
         actor: "director",
         payload: { errors: validation.errors },
       });
-      return { jobId, success: false, spentUsd: 0 };
+      return {
+        jobId,
+        success: false,
+        spentUsd: 0,
+        error: `Plan validation failed: ${validation.errors.join("; ")}`,
+      };
     }
 
     this.ledger.append({

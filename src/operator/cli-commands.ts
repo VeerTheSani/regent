@@ -17,6 +17,9 @@ export async function handleJobCommand(goal: string): Promise<void> {
     );
   } else {
     console.error(`[regent] Job ${res.jobId} failed or was abandoned.`);
+    if (res.error) {
+      console.error(`[regent] Reason: ${res.error}`);
+    }
     process.exit(1);
   }
 }
