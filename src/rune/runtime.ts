@@ -10,8 +10,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import spawn from "cross-spawn";
+import { RuneCompiler } from "./compiler.js";
 
 export class RuneRuntime {
+  private compiler = new RuneCompiler();
   /**
    * Execute a shell command natively and return trimmed stdout.
    */
@@ -84,18 +86,21 @@ export class RuneRuntime {
       throw new Error(`Wallpaper file not found: ${abs}`);
     }
 
-    const psCommand = `
-Add-Type -TypeDefinition @"
+    const nativeCode = `
 using System;
 using System.Runtime.InteropServices;
 public class WinApiWallpaper {
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+    public static void Main(string[] args) {
+        if (args.Length > 0) {
+            SystemParametersInfo(0x0014, 0, args[0], 0x01 | 0x02);
+            Console.WriteLine("WALLPAPER_SET:" + args[0]);
+        }
+    }
 }
-"@;
-[WinApiWallpaper]::SystemParametersInfo(0x0014, 0, "${abs.replace(/\\/g, "\\\\")}", 0x01 -bor 0x02);
 `;
-    await this.exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, " ")}"`);
+    await this.compiler.runNative(nativeCode, [abs]);
     return true;
   }
 
