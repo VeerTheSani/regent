@@ -17,15 +17,18 @@ export interface NotificationOptions {
 export function inQuietHours(quietHours = "23:00-08:00"): boolean {
   try {
     const [startStr, endStr] = quietHours.split("-");
-    const [startH] = startStr.split(":").map(Number);
-    const [endH] = endStr.split(":").map(Number);
-    const currentHour = new Date().getHours();
+    const [startH, startM = 0] = startStr.split(":").map(Number);
+    const [endH, endM = 0] = endStr.split(":").map(Number);
+    const now = new Date();
+    const currentMin = now.getHours() * 60 + now.getMinutes();
+    const startTotal = startH * 60 + startM;
+    const endTotal = endH * 60 + endM;
 
-    if (startH > endH) {
+    if (startTotal > endTotal) {
       // Over midnight, e.g. 23:00 to 08:00
-      return currentHour >= startH || currentHour < endH;
+      return currentMin >= startTotal || currentMin < endTotal;
     }
-    return currentHour >= startH && currentHour < endH;
+    return currentMin >= startTotal && currentMin <= endTotal;
   } catch {
     return false;
   }

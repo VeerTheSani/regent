@@ -140,7 +140,7 @@ public class WinRect {
 "@;
 Get-Process | Where-Object { $_.MainWindowTitle -ne "" } | ForEach-Object {
     $rect = New-Object RECT;
-    [WinRect]::GetWindowRect($_.MainWindowHandle, [ref]$rect);
+    [void][WinRect]::GetWindowRect($_.MainWindowHandle, [ref]$rect);
     [PSCustomObject]@{
         hwnd = $_.MainWindowHandle.ToInt64();
         title = $_.MainWindowTitle;
@@ -156,7 +156,10 @@ Get-Process | Where-Object { $_.MainWindowTitle -ne "" } | ForEach-Object {
       const out = await this.runPs(script);
       if (!out) return [];
       const data = JSON.parse(out);
-      return Array.isArray(data) ? data : [data];
+      const items = Array.isArray(data) ? data : [data];
+      return items.filter((x): x is WindowInfo =>
+        Boolean(x && typeof x === "object" && typeof x.hwnd === "number"),
+      );
     } catch {
       return [];
     }

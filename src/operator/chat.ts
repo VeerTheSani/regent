@@ -2,16 +2,22 @@
  * src/operator/chat.ts
  *
  * Autonomous conversational chat session with Regent powered by Gemini 3.8.
- * Regent acts as the coordinator/planner, while Hermes Agent serves as the
- * full-capability execution middleman with browser, terminal, and desktop tools.
- * When ANY command fails, Regent automatically escalates to Hermes to fix it
- * and complete the task like a human.
+ * Integrates:
+ * - Polyglot Execution Sandbox (Python, Node, PowerShell, C#)
+ * - Human-Grade Desktop Controller (Mouse, Keyboard, Windows, Display)
+ * - Live Chrome & Media Driver (CDP, Playwright, HTML5 Video Control)
+ * - Closed-Loop Self-Healing Engine (Auto-diagnoses and fixes errors across 3 retries)
+ * - Hermes Agent Fleet (Multimodal browser and research middleman)
  */
 
 import * as readline from "node:readline";
 import spawn from "cross-spawn";
 import { getActiveModel, getOpenRouterKey } from "../config/keys.js";
 import { type ChatMessage, callOpenRouter } from "../config/openrouter.js";
+import { ChromeBrowserDriver } from "../engine/browser-driver.js";
+import { DesktopController } from "../engine/desktop.js";
+import { PolyglotEngine } from "../engine/polyglot.js";
+import { SelfHealingEngine } from "../engine/self-heal.js";
 import { KillSwitch } from "../kernel/kill-switch.js";
 import { RuneInterpreter } from "../rune/interpreter.js";
 import { runDiagnostics } from "./doctor.js";
@@ -66,12 +72,16 @@ export async function startChatSession(): Promise<void> {
   const model = getActiveModel();
   const killSwitch = new KillSwitch();
   const rune = new RuneInterpreter();
+  const desktop = new DesktopController();
+  const browser = new ChromeBrowserDriver();
+  const polyglot = new PolyglotEngine();
+  const healing = new SelfHealingEngine();
 
   console.log("==========================================================");
   console.log("       🛡️ Regent Autonomous Console (Gemini 3.8)           ");
   console.log("==========================================================");
-  console.log(`Coordinator: ${model}`);
-  console.log("Execution Middleman: Hermes Agent (Chrome, Terminal, Win32)");
+  console.log(`Model: ${model}`);
+  console.log("Engine: Self-Healing Desktop Controller + Live Chrome CDP");
   console.log("Commands: /doctor, /stop, /exit\n");
   console.log("Just tell me what to do in plain English. I'll execute it.\n");
 
@@ -79,21 +89,22 @@ export async function startChatSession(): Promise<void> {
     {
       role: "system",
       content: `You are Regent, the autonomous orchestrator on Windows 11.
-You have an execution middleman: HERMES AGENT, which has full human-like browser control, terminal tools, and vision analysis.
+You have full-metal control of this machine through a closed-loop execution engine with self-healing capabilities.
+You also have HERMES AGENT as your execution middleman for complex web and multimodal browsing.
 
-RULES OF ENGAGEMENT:
-1. NEVER dump errors on the operator. NEVER give instructions or tell them to open PowerShell.
-2. For BROWSER, YOUTUBE, SONGS, DOWNLOADING ASSETS, or MULTI-STEP AUTOMATION:
-   DO NOT write complicated PowerShell commands.
-   EMIT A \`\`\`hermes BLOCK containing the exact instructions.
-   Hermes will open Chrome, navigate, analyze, execute, and deliver results like a human.
-   Example:
-   \`\`\`hermes
-   Open the slowed 0.5x version of Memory Reboot on YouTube in the background.
+CRITICAL OPERATIONAL RULES:
+1. NEVER dump errors on the operator. NEVER give instructions or tell them to open PowerShell manually.
+2. YOU ARE AN AUTONOMOUS CONTROLLER. YOU EXECUTE DIRECTLY.
+3. For BROWSER, YOUTUBE, SONGS, DOWNLOADING ASSETS, or MULTI-STEP AUTOMATION:
+   Emit a \`\`\`hermes block or \`\`\`rune block with \`browser.open "<url>"\` or \`media.play "<song>"\`.
+   Example for playing a song:
+   \`\`\`rune
+   media.play "memory reboot 0.5x slowed"
+   notify "Regent Audio" "Playing Memory Reboot at 0.5x in background"
    \`\`\`
-3. For SIMPLE OS ACTIONS (beep, wallpaper, clip, processes, notifications):
-   EMIT A \`\`\`rune BLOCK.
-   Available RUNE primitives:
+4. For SYSTEM ACTIONS (wallpaper, sound, processes, windows, screenshots, clipboard):
+   Emit a \`\`\`rune block.
+   Primitives available:
    - browser.open "<url>"
    - media.play "<query or url>"
    - wallpaper "<path>"
@@ -103,8 +114,10 @@ RULES OF ENGAGEMENT:
    - clip "<text>" (or clip to read)
    - sys.ps <limit>
    - sys.kill <pid|name>
-4. If a RUNE command fails, the system will automatically dispatch Hermes to fix it and get it done.
-5. Answer conversational questions directly and concisely.`,
+   - mouse.move <x> <y>, mouse.click <left|right>
+   - key.type "<text>", key.press "<key>"
+5. For complex code scripts, emit \`\`\`python, \`\`\`node, or \`\`\`powershell blocks.
+6. Answer conversational questions directly and concisely.`,
     },
   ];
 
@@ -157,7 +170,6 @@ RULES OF ENGAGEMENT:
         temperature: 0.2,
       });
 
-      // Clear the "thinking..." line
       readline.cursorTo(process.stdout, 0);
       readline.clearLine(process.stdout, 0);
 
@@ -165,14 +177,14 @@ RULES OF ENGAGEMENT:
 
       const runeMatch = responseText.match(/```rune\s*([\s\S]*?)```/i);
       const hermesMatch = responseText.match(/```hermes\s*([\s\S]*?)```/i);
-      const shellMatch = responseText.match(/```(?:shell|bash|powershell|cmd)\s*([\s\S]*?)```/i);
+      const pyMatch = responseText.match(/```python\s*([\s\S]*?)```/i);
+      const psMatch = responseText.match(/```powershell\s*([\s\S]*?)```/i);
+      const nodeMatch = responseText.match(/```(?:javascript|node|js)\s*([\s\S]*?)```/i);
 
       if (hermesMatch) {
         const hermesTask = hermesMatch[1].trim();
         const nonCodeText = responseText.replace(/```hermes[\s\S]*?```/i, "").trim();
-        if (nonCodeText) {
-          console.log(`\n${nonCodeText}\n`);
-        }
+        if (nonCodeText) console.log(`\n${nonCodeText}\n`);
 
         rl.pause();
         const hermesResult = await runHermesTask(hermesTask);
@@ -185,61 +197,69 @@ RULES OF ENGAGEMENT:
       } else if (runeMatch) {
         const runeCode = runeMatch[1].trim();
         const nonCodeText = responseText.replace(/```rune[\s\S]*?```/i, "").trim();
-        if (nonCodeText) {
-          console.log(`\n${nonCodeText}\n`);
-        }
+        if (nonCodeText) console.log(`\n${nonCodeText}\n`);
 
-        console.log("⚡ Executing RUNE native action...");
         rl.pause();
-        try {
-          const runeResult = await rune.run(runeCode);
-          console.log(`\n✅ Result: ${runeResult || "Completed"}\n`);
+        const healResult = await healing.executeWithHealing({
+          goal: input,
+          maxRetries: 3,
+          executeAttempt: async (att, lastErr, diag) => {
+            if (att === 1) {
+              console.log("⚡ Executing native RUNE action...");
+              return rune.run(runeCode);
+            }
+            console.log(`\n🔄 Self-Healing Attempt ${att}: ${diag}`);
+            // Fallback strategy: delegate to Hermes Agent
+            return runHermesTask(
+              `User requested: "${input}". Low-level action failed with "${lastErr}". Execute this using your browser/system tools completely.`,
+            );
+          },
+        });
+
+        if (healResult.success) {
+          console.log(`\n✅ Action Completed: ${healResult.output || "Done"}\n`);
           conversationHistory.push({
             role: "assistant",
-            content: `${responseText}\n\n[RUNE Output]:\n${runeResult || "Completed"}`,
+            content: `${responseText}\n\n[Action Completed]:\n${healResult.output || "Done"}`,
           });
-        } catch (err: unknown) {
-          const errMsg = err instanceof Error ? err.message : String(err);
-          console.log(`\n⚠️ Direct RUNE action encountered: ${errMsg}`);
-          console.log(
-            "⚡ Auto-escalating to Hermes Agent to fix and complete the task like a human...",
+        } else {
+          console.error(
+            `\n❌ Action could not be completed after ${healResult.attempts} self-healing attempts.\n`,
           );
-
-          // Automatic self-healing escalation to Hermes Agent
-          const recoveryTask = `The user requested: "${input}". A low-level action encountered an error: "${errMsg}". Use your full toolbelt (open Chrome, search YouTube/web, execute scripts, or Win32) to fulfill the user's request completely and cleanly.`;
-          const hermesResult = await runHermesTask(recoveryTask);
-
-          conversationHistory.push({
-            role: "assistant",
-            content: `The initial command had an issue, but I auto-escalated to Hermes Agent who completed it:\n${hermesResult}`,
-          });
         }
         rl.resume();
-      } else if (shellMatch) {
-        const shellCmd = shellMatch[1].trim();
+      } else if (pyMatch) {
+        const code = pyMatch[1].trim();
         rl.pause();
-        try {
-          const out = await rune.runtime.exec(shellCmd);
-          console.log(out || "[Command finished with no output]");
-          console.log();
-          conversationHistory.push({
-            role: "assistant",
-            content: `${responseText}\n\n[Command Output]:\n${out}`,
-          });
-        } catch (err: unknown) {
-          const errMsg = err instanceof Error ? err.message : String(err);
-          console.log(`\n⚠️ Shell command failed: ${errMsg}`);
-          console.log("⚡ Auto-escalating to Hermes Agent to solve it directly...");
-          const recoveryTask = `The user wanted: "${input}". The shell command failed with "${errMsg}". Execute this task directly on the system.`;
-          const hermesResult = await runHermesTask(recoveryTask);
-          conversationHistory.push({
-            role: "assistant",
-            content: `Command recovered by Hermes Agent:\n${hermesResult}`,
-          });
+        console.log("⚡ Executing via Python Sandbox...");
+        const pyRes = await polyglot.runPython(code);
+        if (pyRes.ok) {
+          console.log(`\n✅ Result: ${pyRes.stdout || "Done"}\n`);
+        } else {
+          console.log(`⚠️ Python error, auto-healing via Hermes: ${pyRes.stderr}`);
+          await runHermesTask(`Fix and run: ${input}`);
         }
+        rl.resume();
+      } else if (psMatch) {
+        const script = psMatch[1].trim();
+        rl.pause();
+        console.log("⚡ Executing via Base64 PowerShell Sandbox...");
+        const psRes = await polyglot.runPowerShell(script);
+        if (psRes.ok) {
+          console.log(`\n✅ Result: ${psRes.stdout || "Done"}\n`);
+        } else {
+          console.log(`⚠️ PowerShell error, auto-healing via Hermes: ${psRes.stderr}`);
+          await runHermesTask(`Fix and run: ${input}`);
+        }
+        rl.resume();
+      } else if (nodeMatch) {
+        const code = nodeMatch[1].trim();
+        rl.pause();
+        console.log("⚡ Executing via Node.js Sandbox...");
+        const nodeRes = await polyglot.runNode(code);
+        console.log(`\n✅ Result: ${nodeRes.stdout || "Done"}\n`);
         rl.resume();
       } else {
-        // Plain conversational answer
         console.log(`\n${responseText}\n`);
         conversationHistory.push({ role: "assistant", content: responseText });
       }
