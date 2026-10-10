@@ -1,0 +1,144 @@
+{
+  "$ref": "#/definitions/Verdict",
+  "definitions": {
+    "Verdict": {
+      "type": "object",
+      "properties": {
+        "contractId": {
+          "type": "string"
+        },
+        "attempt": {
+          "type": "integer"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "rationale": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "score"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "composite": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "APPROVE",
+            "REVISE",
+            "REPLAN",
+            "ESCALATE"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "defects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "e.g. D-1"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "BLOCKER",
+                  "MAJOR",
+                  "MINOR",
+                  "NIT"
+                ]
+              },
+              "dimension": {
+                "type": "string",
+                "description": "e.g. functional, visual_fidelity, code_quality"
+              },
+              "evidence": {
+                "type": "string",
+                "description": "Exact file:line, screenshot region, or log line"
+              },
+              "observed": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              },
+              "fix": {
+                "type": "string",
+                "description": "Concrete fix instructions"
+              }
+            },
+            "required": [
+              "id",
+              "severity",
+              "dimension",
+              "evidence",
+              "observed",
+              "expected",
+              "fix"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "verifiedClaims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "refutedClaims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "summary": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "usd": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "contractId",
+        "attempt",
+        "dimensions",
+        "composite",
+        "decision",
+        "summary"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

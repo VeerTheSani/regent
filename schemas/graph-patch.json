@@ -1,0 +1,266 @@
+{
+  "$ref": "#/definitions/GraphPatch",
+  "definitions": {
+    "GraphPatch": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "add",
+            "replace",
+            "remove"
+          ]
+        },
+        "targetContractId": {
+          "type": "string"
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Contract ID, e.g. CTR-01"
+              },
+              "title": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "code",
+                  "ui",
+                  "test",
+                  "refactor",
+                  "integration",
+                  "merge",
+                  "research",
+                  "document",
+                  "browser_task",
+                  "data",
+                  "ops",
+                  "review"
+                ]
+              },
+              "goal": {
+                "type": "string",
+                "description": "Outcome, not implementation steps"
+              },
+              "context": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "scope": {
+                "type": "object",
+                "properties": {
+                  "writePaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "readPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [
+                      "**"
+                    ]
+                  },
+                  "domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "additionalProperties": false
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "acceptance": {
+                "type": "object",
+                "properties": {
+                  "gates": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "command",
+                            "scope",
+                            "file_exists",
+                            "http",
+                            "no_blank_frame",
+                            "console_clean",
+                            "secret_scan",
+                            "visual_diff"
+                          ]
+                        },
+                        "spec": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "spec"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "default": []
+                  },
+                  "dodRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "rubric": {
+                    "type": "string",
+                    "default": "code"
+                  },
+                  "visualTargets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "viewport": {
+                          "type": "object",
+                          "properties": {
+                            "width": {
+                              "type": "number"
+                            },
+                            "height": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "width",
+                            "height"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "waitFor": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "viewport",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "default": []
+                  }
+                },
+                "additionalProperties": false
+              },
+              "workerPreference": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "claude-code",
+                    "hermes",
+                    "vscode",
+                    "chatbot",
+                    "browser",
+                    "shell"
+                  ]
+                }
+              },
+              "risk": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "default": "medium"
+              },
+              "budget": {
+                "type": "object",
+                "properties": {
+                  "maxUsd": {
+                    "type": "number"
+                  },
+                  "maxAttempts": {
+                    "type": "integer",
+                    "default": 6
+                  },
+                  "maxMinutesPerAttempt": {
+                    "type": "number",
+                    "default": 30
+                  }
+                },
+                "required": [
+                  "maxUsd"
+                ],
+                "additionalProperties": false
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "kind",
+              "goal",
+              "scope",
+              "acceptance",
+              "workerPreference",
+              "budget"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "rationale"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

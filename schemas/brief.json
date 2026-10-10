@@ -1,0 +1,196 @@
+{
+  "$ref": "#/definitions/MissionBrief",
+  "definitions": {
+    "MissionBrief": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "default": 1
+        },
+        "goal": {
+          "type": "string",
+          "description": "One paragraph, outcome-focused, in the operator's terms"
+        },
+        "deliverableKind": {
+          "type": "string",
+          "enum": [
+            "code_change",
+            "new_project",
+            "document",
+            "research_report",
+            "web_task",
+            "data",
+            "mixed"
+          ]
+        },
+        "definitionOfDone": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "DOD identifier, e.g. DOD-1"
+              },
+              "statement": {
+                "type": "string",
+                "description": "Checkable condition, e.g. Route /settings renders without console errors"
+              },
+              "verification": {
+                "type": "string",
+                "enum": [
+                  "command",
+                  "test",
+                  "visual",
+                  "http",
+                  "file",
+                  "judge"
+                ]
+              },
+              "command": {
+                "type": "string",
+                "description": "Command when verification = command|test"
+              },
+              "mustPass": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "id",
+              "statement",
+              "verification"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "statement": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "reversibleIfWrong": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "statement",
+              "confidence",
+              "reversibleIfWrong"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "workspace": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "git_repo",
+                "directory",
+                "none"
+              ]
+            },
+            "root": {
+              "type": "string"
+            },
+            "baseRef": {
+              "type": "string"
+            },
+            "profileId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        "qualityBar": {
+          "type": "object",
+          "properties": {
+            "approveThreshold": {
+              "type": "number",
+              "default": 8.5
+            },
+            "panelForFinalAcceptance": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "budget": {
+          "type": "object",
+          "properties": {
+            "maxUsd": {
+              "type": "number"
+            },
+            "maxWallClockMin": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "maxUsd",
+            "maxWallClockMin"
+          ],
+          "additionalProperties": false
+        },
+        "interpretationConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "alternativeReadings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Other plausible readings and why they were rejected"
+        }
+      },
+      "required": [
+        "jobId",
+        "goal",
+        "deliverableKind",
+        "definitionOfDone",
+        "workspace",
+        "qualityBar",
+        "budget",
+        "interpretationConfidence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

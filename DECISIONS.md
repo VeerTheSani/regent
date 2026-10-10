@@ -96,3 +96,20 @@
 
 ### D17: Desktop Capture via PowerShell DPI-Aware Win32 Interop
 - **Decision**: Window and screen captures execute through `capture-window.ps1` utilizing `SetProcessDPIAware()`, `GetWindowRect()`, and `PrintWindow(PW_RENDERFULLCONTENT)` with fallback to `CopyFromScreen()`.
+
+## M5: Director, Planner, Validator & Judge
+
+### D18: Zod Schema Export to JSON Schema
+- **Decision**: Integrated `zod-to-json-schema` to export `MissionBrief`, `Contract`, `Verdict`, `GraphPatch`, `AskOutput`, and `PermitOutput` into `schemas/*.json`.
+- **Why**: Provides single-source-of-truth JSON Schema definitions consumed by Claude Code CLI (`--json-schema`) and OpenRouter structured outputs.
+
+### D19: Strict 2-Construct Template Engine
+- **Decision**: Implemented `renderPrompt` supporting only `{{var}}` and `{{#if var}}...{{/if}}`.
+- **Why**: Throws immediately on missing variables or unrecognized syntax, preventing unrendered template artifacts from ever reaching language model contexts.
+
+### D20: Deterministic Task Graph Validation & 20% Budget Reserve
+- **Decision**: `validatePlan` enforces: (1) DAG acyclicity via DFS color tracking, (2) complete Definition-of-Done coverage, (3) disjoint write scopes between parallel siblings via glob intersection, and (4) reserving >=20% of job budget for revisions and integration.
+
+### D21: Convergence Rule Enforcement & Verdict Recomputation
+- **Decision**: Built `recomputeVerdict` calculating true weighted composite scores from rubric dimension weights.
+- **Why**: Overrides inconsistent judge outputs and ensures any BLOCKER defect or sub-threshold score unconditionally forces a `REVISE` decision.

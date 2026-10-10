@@ -1,0 +1,36 @@
+{
+  "$ref": "#/definitions/AskOutput",
+  "definitions": {
+    "AskOutput": {
+      "type": "object",
+      "properties": {
+        "answer": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "fact",
+            "decision",
+            "assumption",
+            "denied",
+            "deferred"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "provisional": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "answer",
+        "kind",
+        "rationale"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
