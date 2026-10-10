@@ -33,6 +33,7 @@ export const GateDefinition = z.object({
     "console_clean",
     "secret_scan",
     "visual_diff",
+    "visual_verify",
   ]),
   spec: z.record(z.unknown()),
 });

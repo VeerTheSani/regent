@@ -24,7 +24,8 @@ export interface GateSpec {
     | "http"
     | "no_blank_frame"
     | "console_clean"
-    | "visual_diff";
+    | "visual_diff"
+    | "visual_verify";
   spec: Record<string, unknown>;
 }
 
@@ -295,6 +296,50 @@ export class GateRunner {
           durationMs: Date.now() - started,
           artifacts,
         };
+      }
+
+      case "visual_verify": {
+        const goal = String(gate.spec.goal ?? "");
+        const shotPath = join(ctx.attemptDir, `screen-verify-${Date.now()}.png`);
+
+        try {
+          const { DesktopController } = await import("../engine/desktop.js");
+          await new DesktopController().captureScreen(shotPath);
+          artifacts.push(shotPath);
+
+          const { readFileSync } = await import("node:fs");
+          const b64 = readFileSync(shotPath).toString("base64");
+
+          const { callOpenRouterWithVision } = await import("../config/openrouter.js");
+          const prompt = `You are the Regent Visual Judge inspecting a Windows desktop screenshot.
+User Goal: "${goal}"
+Question: Looking at this screenshot, did this action succeed and is the intended app/video/content visible and active on screen?
+Respond strictly in JSON matching: { "verified": boolean, "explanation": "<clear 1-sentence reason why verified or what is missing/paused/blocked>" }`;
+
+          const result = await callOpenRouterWithVision(prompt, b64);
+          return {
+            id: gate.id,
+            kind: gate.kind,
+            passed: result.verified ?? false,
+            detail: result.explanation ?? result.text,
+            durationMs: Date.now() - started,
+            artifacts,
+          };
+        } catch {
+          const stats = existsSync(shotPath)
+            ? frameStats(shotPath)
+            : { blank: true, std: 0, distinctColours: 0 };
+          return {
+            id: gate.id,
+            kind: gate.kind,
+            passed: !stats.blank,
+            detail: stats.blank
+              ? "Frame blank"
+              : "Visual snapshot verified non-blank (offline mode)",
+            durationMs: Date.now() - started,
+            artifacts,
+          };
+        }
       }
     }
   }

@@ -195,10 +195,7 @@ export class ChromeBrowserDriver {
         await this.context.close();
       }
       if (this.browser?.isConnected()) {
-        await Promise.race([
-          this.browser.close(),
-          new Promise<void>((r) => setTimeout(r, 1000)),
-        ]);
+        await Promise.race([this.browser.close(), new Promise<void>((r) => setTimeout(r, 1000))]);
       }
     } catch {}
     this.context = null;

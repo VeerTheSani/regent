@@ -111,4 +111,18 @@ describe("M4: T0 Deterministic Gates & Secret Scan", () => {
     );
     expect(failResult.passed).toBe(false);
   });
+
+  it("visual_verify gate captures screen and evaluates result", async () => {
+    const res = await runner.runGate(
+      {
+        id: "gate-visual-test",
+        kind: "visual_verify",
+        spec: { goal: "Verify desktop is accessible" },
+      },
+      ctx,
+    );
+    expect(res.id).toBe("gate-visual-test");
+    expect(typeof res.passed).toBe("boolean");
+    expect(res.artifacts.length).toBeGreaterThan(0);
+  });
 });

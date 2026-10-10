@@ -45,11 +45,9 @@ export function generatePlan(
         acceptance: {
           gates: [
             {
-              id: "gate-execution",
-              kind: "command",
-              spec: {
-                cmd: dod1?.command ?? (process.platform === "win32" ? "cmd /c exit 0" : "true"),
-              },
+              id: "gate-visual-verify",
+              kind: "visual_verify",
+              spec: { goal: brief.goal },
             },
           ],
           dodRefs: brief.definitionOfDone.map((d) => d.id),
