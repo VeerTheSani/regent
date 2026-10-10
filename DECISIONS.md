@@ -113,3 +113,14 @@
 ### D21: Convergence Rule Enforcement & Verdict Recomputation
 - **Decision**: Built `recomputeVerdict` calculating true weighted composite scores from rubric dimension weights.
 - **Why**: Overrides inconsistent judge outputs and ensures any BLOCKER defect or sub-threshold score unconditionally forces a `REVISE` decision.
+
+## M6: Dispatcher, Strategy Ladder & Toy Repo Orchestration
+
+### D22: Worker Selection via Thompson Sampling
+- **Decision**: Implemented Johnk's generator algorithm for Beta variate sampling (`sampleBeta`) when historical runs $\ge 5$. For cold starts, posterior mean is used.
+
+### D23: Strategy Ladder Anti-Loop Progression
+- **Decision**: Directives adjust attempt strategy: R1 resumes session with sharper critique; R2 starts fresh session; R3 escalates model tier; R4 transfers worker; R5 consults secondary models; R6 replans; R7 escalates.
+
+### D24: Orchestration Daemon Crash Recovery
+- **Decision**: During daemon boot, existing ledger events are replayed to reconstruct state projections. Any in-flight `attempt.started` lacking an `attempt.finished` is marked as `attempt.interrupted` to prevent duplicate concurrent runs.

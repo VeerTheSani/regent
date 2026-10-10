@@ -23,6 +23,7 @@ export interface GateSpec {
     | "file_exists"
     | "http"
     | "no_blank_frame"
+    | "console_clean"
     | "visual_diff";
   spec: Record<string, unknown>;
 }
@@ -227,6 +228,21 @@ export class GateRunner {
           detail: stats.blank
             ? `Frame detected as blank (std: ${stats.std.toFixed(2)}, colors: ${stats.distinctColours})`
             : "Frame visually valid (not blank)",
+          durationMs: Date.now() - started,
+          artifacts,
+        };
+      }
+
+      case "console_clean": {
+        const errors = (gate.spec.consoleErrors as string[]) ?? [];
+        const passed = errors.length === 0;
+        return {
+          id: gate.id,
+          kind: gate.kind,
+          passed,
+          detail: passed
+            ? "Console clean with zero errors"
+            : `Console errors detected: ${errors.join("; ")}`,
           durationMs: Date.now() - started,
           artifacts,
         };
