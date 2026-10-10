@@ -12,6 +12,29 @@ import { dirname, resolve } from "node:path";
 import spawn from "cross-spawn";
 import { RuneCompiler } from "./compiler.js";
 
+/**
+ * Resolves paths with cross-platform environment variable expansion:
+ * - Windows PowerShell: $env:VAR
+ * - Windows CMD: %VAR%
+ * - Unix / Bash: $VAR or ${VAR}
+ * - Home shortcut: ~/ or ~
+ */
+export function expandEnvPath(rawPath: string): string {
+  let p = rawPath.trim().replace(/^["']|["']$/g, "");
+  // PowerShell env vars: $env:VAR
+  p = p.replace(/\$env:([a-zA-Z0-9_]+)/gi, (_, v) => process.env[v] ?? "");
+  // CMD env vars: %VAR%
+  p = p.replace(/%([a-zA-Z0-9_]+)%/gi, (_, v) => process.env[v] ?? "");
+  // Bash env vars: $VAR or ${VAR}
+  p = p.replace(/\$\{?([a-zA-Z0-9_]+)\}?/g, (_, v) => process.env[v] ?? "");
+  // Home directory tilde: ~
+  if (p.startsWith("~")) {
+    const home = process.env.USERPROFILE || process.env.HOME || "";
+    p = p.replace(/^~[/\\]?/, home ? `${home}\\` : "");
+  }
+  return resolve(p);
+}
+
 export class RuneRuntime {
   private compiler = new RuneCompiler();
 
@@ -122,8 +145,7 @@ public class WinShellOpen {
    * Set Windows desktop wallpaper via Win32 SystemParametersInfo.
    */
   async setWallpaper(imagePath: string): Promise<boolean> {
-    const cleanPath = imagePath.trim().replace(/^["']|["']$/g, "");
-    const abs = resolve(cleanPath);
+    const abs = expandEnvPath(imagePath);
     if (!existsSync(abs)) {
       throw new Error(`Wallpaper file not found: ${abs}`);
     }
@@ -150,8 +172,7 @@ public class WinApiWallpaper {
    * Capture a full desktop screenshot to a PNG file.
    */
   async screenshot(destPath: string): Promise<string> {
-    const cleanPath = destPath.trim().replace(/^["']|["']$/g, "");
-    const abs = resolve(cleanPath);
+    const abs = expandEnvPath(destPath);
     const dir = dirname(abs);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
@@ -242,16 +263,15 @@ if ($p) { [WinFocus]::SetForegroundWindow($p.MainWindowHandle); Write-Output "FO
    * Read file content.
    */
   readFile(path: string): string {
-    const clean = path.trim().replace(/^["']|["']$/g, "");
-    return readFileSync(resolve(clean), "utf-8");
+    const abs = expandEnvPath(path);
+    return readFileSync(abs, "utf-8");
   }
 
   /**
    * Write file content.
    */
   writeFile(path: string, content: string): void {
-    const clean = path.trim().replace(/^["']|["']$/g, "");
-    const abs = resolve(clean);
+    const abs = expandEnvPath(path);
     const dir = dirname(abs);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(abs, content, "utf-8");

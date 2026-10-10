@@ -47,26 +47,42 @@ export class ChromeBrowserDriver {
   async ensureConnected(): Promise<BrowserContext> {
     if (this.context) return this.context;
 
+    // 1. Fast check if CDP endpoint is actually listening
+    let cdpActive = false;
     try {
-      this.browser = await chromium.connectOverCDP(this.cdpUrl);
-      const contexts = this.browser.contexts();
-      this.context = contexts[0] ?? (await this.browser.newContext());
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 600);
+      const res = await fetch(`${this.cdpUrl}/json/version`, { signal: controller.signal });
+      clearTimeout(id);
+      cdpActive = res.ok;
     } catch {
-      const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-      if (existsSync(chromePath)) {
-        this.browser = await chromium.launch({
-          executablePath: chromePath,
-          headless: this.headless,
-          args: ["--autoplay-policy=no-user-gesture-required"],
-        });
-      } else {
-        this.browser = await chromium.launch({
-          headless: this.headless,
-          args: ["--autoplay-policy=no-user-gesture-required"],
-        });
-      }
-      this.context = await this.browser.newContext();
+      cdpActive = false;
     }
+
+    if (cdpActive) {
+      try {
+        this.browser = await chromium.connectOverCDP(this.cdpUrl, { timeout: 2000 });
+        const contexts = this.browser.contexts();
+        this.context = contexts[0] ?? (await this.browser.newContext());
+        return this.context;
+      } catch {}
+    }
+
+    // 2. Launch browser directly
+    const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+    if (existsSync(chromePath)) {
+      this.browser = await chromium.launch({
+        executablePath: chromePath,
+        headless: this.headless,
+        args: ["--autoplay-policy=no-user-gesture-required"],
+      });
+    } else {
+      this.browser = await chromium.launch({
+        headless: this.headless,
+        args: ["--autoplay-policy=no-user-gesture-required"],
+      });
+    }
+    this.context = await this.browser.newContext();
 
     return this.context;
   }

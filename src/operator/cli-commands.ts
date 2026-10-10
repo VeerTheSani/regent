@@ -10,17 +10,35 @@ import { KillSwitch } from "../kernel/kill-switch.js";
 export async function handleJobCommand(goal: string): Promise<void> {
   console.log(`[regent] Submitting job: "${goal}"`);
   const daemon = new RegentDaemon();
-  const res = await daemon.runJob(goal);
-  if (res.success) {
-    console.log(
-      `[regent] Job ${res.jobId} completed successfully. Total spend: $${res.spentUsd.toFixed(4)}`,
-    );
-  } else {
-    console.error(`[regent] Job ${res.jobId} failed or was abandoned.`);
-    if (res.error) {
-      console.error(`[regent] Reason: ${res.error}`);
+
+  try {
+    const res = await daemon.runJob(goal);
+    if (res.success) {
+      console.log(
+        `[regent] Job ${res.jobId} completed successfully. Total spend: $${res.spentUsd.toFixed(4)}`,
+      );
+    } else {
+      console.log(
+        `\n⚠️ Regent could not complete this task standalone: ${res.error || "Plan/Gate stalled"}`,
+      );
+      console.log("⚡ Auto-escalating to Hermes Agent (Agent-to-Agent resolution)...");
+
+      const { runHermesTask } = await import("./chat.js");
+      const resolution = await runHermesTask(
+        `User requested: "${goal}". Regent encountered an error: "${res.error || "Execution stalled"}". Resolve this task completely and deliver the results.`,
+      );
+      console.log(`\n✅ Task completed via Hermes Agent:\n${resolution}`);
     }
-    process.exit(1);
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.log(`\n⚠️ Unhandled exception: ${errMsg}`);
+    console.log("⚡ Auto-escalating to Hermes Agent (Agent-to-Agent resolution)...");
+
+    const { runHermesTask } = await import("./chat.js");
+    const resolution = await runHermesTask(
+      `User requested: "${goal}". Regent encountered a fatal crash: "${errMsg}". Take over, resolve the task directly, and deliver the outcome.`,
+    );
+    console.log(`\n✅ Task completed via Hermes Agent:\n${resolution}`);
   }
 }
 

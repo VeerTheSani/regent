@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { RuneKernel, type WindowInfo } from "../rune/kernel.js";
-import { RuneRuntime } from "../rune/runtime.js";
+import { RuneRuntime, expandEnvPath } from "../rune/runtime.js";
 
 export interface DesktopState {
   timestamp: number;
@@ -46,7 +46,7 @@ export class DesktopController {
    * Captures high-resolution virtual screen screenshot.
    */
   async captureScreen(destPath: string): Promise<string> {
-    const abs = resolve(destPath);
+    const abs = expandEnvPath(destPath);
     const dir = dirname(abs);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     return this.runtime.screenshot(abs);
