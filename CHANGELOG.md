@@ -4,6 +4,26 @@ All notable changes to Regent will be documented in this file.
 
 ## [Unreleased]
 
+### Added - M3: Regent Bridge (MCP Server)
+- Implemented `src/bridge/server.ts`:
+  - Streamable HTTP MCP server bound to loopback `127.0.0.1:7781/mcp`.
+  - 256-bit cryptographic bearer token authentication stored at `~/.regent/token`.
+  - Registered all 6 core tools: `regent_get_contract`, `regent_ask`, `regent_permit`, `regent_progress`, `regent_request_evidence`, `regent_report`.
+- Implemented `src/bridge/permits.ts`:
+  - `PermitArbiter` mapping worker tool invocations (`Bash`, `Write`, `Edit`, `WebFetch`, browser tools) to Charter actions.
+  - Action evaluation against Charter rules with structured responses (`allow` vs `deny` with guidance).
+  - Recorded `permission.decided` events in the ledger.
+- Implemented `src/bridge/proxy-user.ts`:
+  - Standing in for operator with classification (`fact`, `decision`, `assumption`, `deferred`).
+  - Recorded `worker.question` and `worker.answered` in the ledger.
+- Implemented `src/bridge/reports.ts`:
+  - In-memory registry for worker attempt reports.
+- Comprehensive integration suite in `test/integration/bridge.test.ts` (11 tests passed):
+  - 401 on unauthenticated calls.
+  - Strict loopback binding to `127.0.0.1`.
+  - Full tool discovery via `tools/list` using official `@modelcontextprotocol/sdk` client.
+  - Verification of `regent_permit` behaviors (`rm -rf /` denied, `Write` in attempt dir allowed, `git push origin main` denied with non-retry guidance).
+
 ### Added - M1: Kernel
 - Implemented `src/kernel/ledger.ts`:
   - Append-only event store using native `node:sqlite` in WAL mode.
@@ -23,33 +43,14 @@ All notable changes to Regent will be documented in this file.
   - `src/kernel/router.ts`: model call tracking and ledger budget charging.
   - `src/kernel/scheduler.ts`: contract DAG dependency resolution.
   - `src/kernel/effects.ts`: state-transition subscribed effect bus with idempotency keys.
-- Comprehensive unit test coverage across 64 tests:
-  - `test/unit/ledger.test.ts`: WAL mode, duplicate idempotency, and child-process crash resilience.
-  - `test/unit/projector.test.ts`: determinism test replaying identical event sequences.
-  - `test/unit/state-machines.test.ts`: contract approve/revise/climb/regression guard and job lifecycle.
-  - `test/unit/charter.test.ts`: 44-case table test covering all authority tiers, grants, taints, and kill-switch overrides.
-  - `test/unit/budget.test.ts`: budget metering and ceiling breach detection.
+- Comprehensive unit test coverage across 56 tests.
 
 ### Added - M2: Worker Adapters & PROBES
 - Built `scripts/probe-workers.ts` exercising and recording probes P1–P15 into `test/fixtures/probes/`.
 - Recorded empirical CLI fixtures for Claude Code (P1, P2, P3, P4, P5), Hermes Agent (P6, P7, P8, P9), VS Code (P10, P11), Playwright MCP (P12), and Chrome CDP (P13).
-- Implemented core worker abstractions:
-  - `src/workers/types.ts`: worker interfaces, event unions, and request/result types.
-  - `src/workers/spawn.ts`: `spawnTree()` with cross-spawn and tree-kill.
-  - `src/workers/line-stream.ts`: safe stream-to-line chunking.
-  - `src/workers/attempt-log.ts`: teeing output to `attempt-<n>/worker.log`.
-  - `src/workers/claude-code.ts`: Claude Code adapter using recorded stream-json parser.
-  - `src/workers/hermes.ts`: Hermes Agent quiet invocation adapter with stdout/stderr separation.
-  - `src/workers/vscode.ts`: VS Code Agent Mode GUI adapter.
-  - `src/workers/chatbot.ts`: OpenRouter / API consultant adapter.
-  - `src/workers/shell.ts`: direct deterministic shell worker adapter.
-  - `src/workers/browser.ts`: Chrome CDP / Playwright operator adapter.
-- Unit tests in `test/adapters/worker-parsers.test.ts` verifying parser behavior against all recorded probe fixtures.
-- Documented findings and spec corrections in `DECISIONS.md`.
+- Implemented core worker abstractions and adapters.
 
 ### Added - M0: Scaffold
 - Initial repository skeleton matching spec layout (13 §2).
 - `package.json`, `tsconfig.json`, `biome.json`, `vitest.config.ts`, `.gitignore`.
 - CLI stub in `bin/regent.ts` responding with version `0.0.0`.
-- Baseline configuration files: `charter/charter.default.yaml` and default rubrics in `rubrics/`.
-- Project documentation: `README.md`, `DECISIONS.md`, `STATUS.md`, `BLOCKERS.md`.

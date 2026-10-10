@@ -68,3 +68,19 @@
 ### D12: Pure State Machine Reducers & Deterministic Projections
 - **Decision**: Implemented `reduceContract` and `reduceJob` as pure functions without side effects. Side effects are executed via `EffectBus` using idempotent keys (`idem_key`).
 - **Why**: Allows deterministic projection replaying from the append-only event ledger and reliable recovery on crash or restart.
+
+## M3: Regent Bridge (MCP Server)
+
+### D13: MCP SDK Version Verification & Transport Binding
+- **Observation**: Verified `@modelcontextprotocol/sdk` version `1.6.1`.
+- **Import Paths**:
+  - `McpServer`: `@modelcontextprotocol/sdk/server/mcp.js`
+  - `StreamableHTTPServerTransport`: `@modelcontextprotocol/sdk/server/streamableHttp.js`
+  - `Client`: `@modelcontextprotocol/sdk/client/index.js`
+  - `StreamableHTTPClientTransport`: `@modelcontextprotocol/sdk/client/streamableHttp.js`
+- **Method Signature**: `server.registerTool(name, { description, inputSchema }, callback)`.
+- **Transport Configuration**: Used `sessionIdGenerator: () => randomUUID()` and `enableJsonResponse: true` for direct JSON and SSE compatibility across standard MCP clients.
+
+### D14: 256-Bit Bearer Token & Windows ACL
+- **Decision**: On first boot, Regent generates a cryptographic 256-bit hex token (`crypto.randomBytes(32).toString("hex")`) saved to `%USERPROFILE%\.regent\token`.
+- **Windows Security Note**: On Windows 11, `%USERPROFILE%\.regent` inherits the user's private ACL (`NT AUTHORITY\SYSTEM` and `<User>` have Full Control, other users denied). All attempt configs referencing the token are created within this user boundary, bound exclusively to loopback (`127.0.0.1:7781`).
