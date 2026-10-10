@@ -2,9 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Regent Dashboard</title>
+  <title>Regent — Autonomous Local Orchestrator</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #0d1117; color: #c9d1d9; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 20px; color: #58a6ff; }
+    .btn-stop { background: #da3633; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-stop:hover { background: #b62324; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; }
+    h2 { font-size: 16px; margin-top: 0; border-bottom: 1px solid #21262d; padding-bottom: 8px; color: #f0f6fc; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #21262d; }
+    th { color: #8b949e; }
+    #events-log { height: 280px; overflow-y: auto; font-family: monospace; font-size: 12px; background: #010409; padding: 10px; border-radius: 4px; border: 1px solid #30363d; }
+    .event-line { margin-bottom: 4px; color: #7ee787; }
+  </style>
 </head>
 <body>
-  <h1>Regent Autonomous Local Orchestrator</h1>
+  <header>
+    <h1>Regent Autonomous Dashboard</h1>
+    <div>
+      <button class="btn-stop" onclick="stopRegent()">EMERGENCY STOP</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Active Jobs</h2>
+      <table id="jobs-table">
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Status</th>
+            <th>Spend</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody id="jobs-body">
+          <tr><td colspan="4">Loading jobs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Live Event Stream (SSE)</h2>
+      <div id="events-log"></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadJobs() {
+      try {
+        const res = await fetch('/api/jobs');
+        const data = await res.json();
+        const tbody = document.getElementById('jobs-body');
+        tbody.innerHTML = '';
+        const jobs = Object.values(data.jobs || {});
+        if (jobs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">No active jobs</td></tr>';
+          return;
+        }
+        for (const j of jobs) {
+          tbody.innerHTML += `<tr>
+            <td><code>${j.jobId}</code></td>
+            <td><strong>${j.status}</strong></td>
+            <td>$${(j.spentUsd || 0).toFixed(4)}</td>
+            <td>${new Date(j.updated).toLocaleTimeString()}</td>
+          </tr>`;
+        }
+      } catch (err) {
+        console.error('Failed to load jobs:', err);
+      }
+    }
+
+    async function stopRegent() {
+      if (confirm('Engage emergency STOP? All running processes will terminate immediately.')) {
+        await fetch('/api/stop', { method: 'POST' });
+        alert('STOP sentinel engaged.');
+      }
+    }
+
+    // Connect SSE
+    const evtSource = new EventSource('/api/events');
+    const logDiv = document.getElementById('events-log');
+
+    evtSource.onmessage = (e) => {
+      const line = document.createElement('div');
+      line.className = 'event-line';
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${e.data}`;
+      logDiv.appendChild(line);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      loadJobs();
+    };
+
+    loadJobs();
+    setInterval(loadJobs, 5000);
+  </script>
 </body>
 </html>

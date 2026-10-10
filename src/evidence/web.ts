@@ -18,7 +18,15 @@ export async function getSharedBrowser(): Promise<Browser> {
   try {
     sharedBrowser = await chromium.connectOverCDP("http://127.0.0.1:9222");
   } catch {
-    sharedBrowser = await chromium.launch({ headless: true });
+    const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+    if (existsSync(chromePath)) {
+      sharedBrowser = await chromium.launch({
+        executablePath: chromePath,
+        headless: true,
+      });
+    } else {
+      sharedBrowser = await chromium.launch({ headless: true });
+    }
   }
   return sharedBrowser;
 }

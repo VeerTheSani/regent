@@ -132,3 +132,14 @@
 
 ### D26: Consultant Diversity Constraint
 - **Decision**: `pickConsultants()` enforces including at least one non-Anthropic model family (e.g. Meta Llama 3.3, Google Gemini) to avoid vendor monoculture when evaluating attempts.
+
+## M8: Browser Operator, Dashboard & Notification Infrastructure
+
+### D27: Chrome Executable Resolution for Playwright
+- **Decision**: In environments without a separate `npx playwright install`, Playwright `chromium.launch` targets the host's existing Chrome installation (`C:\Program Files\Google\Chrome\Application\chrome.exe`) via `executablePath`, enabling full headless browser automation without multi-hundred-megabyte duplicate downloads.
+
+### D28: Single Static Dashboard Architecture
+- **Decision**: Web dashboard (`http://127.0.0.1:7780`) uses a zero-build static HTML/vanilla JS architecture consuming standard REST endpoints (`/api/jobs`, `/api/stop`) and real-time SSE streams (`/api/events`), minimizing background resource usage.
+
+### D29: Browser Form T1 Classification & Security
+- **Decision**: Browser worker inspects form field semantics (`password`, `cvc`, `terms`) and classifies form kinds (`login`, `payment`, `account`, `legal`). `browser.submit` on `login` forms fails closed to `A3 needs_grant`.
