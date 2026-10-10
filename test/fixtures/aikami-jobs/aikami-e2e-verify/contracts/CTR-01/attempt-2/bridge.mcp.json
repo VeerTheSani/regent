@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "regent": {
+      "type": "http",
+      "url": "http://127.0.0.1:7781/mcp?job=aikami-e2e-verify&ctr=CTR-01&attempt=2",
+      "headers": {
+        "Authorization": "Bearer internal"
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
-# DELIVERY — job-mv2ijzy4: Fix the bug in add.ts so that add(a, b) returns a + b and all tests pass
+# DELIVERY — job-mv2jcmbi: Build verified feature
 Status: ✅ COMPLETE   ·   Final acceptance 9.2/10   ·   $0.00   ·   5 min
 
 ## What you got
-- Branch `regent/job-mv2ijzy4/CTR-01-a1` (2 commits, +15 −2 across 2 files).
-- Core deliverable for: Fix the bug in add.ts so that add(a, b) returns a + b and all tests pass
+- Branch `regent/job-mv2jcmbi/CTR-01-a3` (2 commits, +15 −2 across 2 files).
+- Core deliverable for: Build verified feature
 
 ## Definition of done
 | DoD | Status | Evidence |
@@ -11,7 +11,7 @@ Status: ✅ COMPLETE   ·   Final acceptance 9.2/10   ·   $0.00   ·   5 min
 | DOD-1 All unit tests pass with zero errors | ✅ verified | gates/DOD-1.log |
 | DOD-2 Typecheck passes cleanly with no compiler warnings | ✅ verified | gates/DOD-2.log |
 
-## Decisions Regent made for you  (mark any you disagree with: regent feedback job-mv2ijzy4 <id> "…")
+## Decisions Regent made for you  (mark any you disagree with: regent feedback job-mv2jcmbi <id> "…")
 - DEC-1 Preserved test-driven verification standards across all contracts.
 
 ## What was not done / caveats

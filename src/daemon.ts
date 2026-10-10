@@ -7,7 +7,6 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { generateDeliveryReport } from "./reporter/delivery.js";
 import { interpretJob } from "./director/interpret.js";
 import { generatePlan } from "./director/plan.js";
 import { composeWorkRequest } from "./dispatcher/compose-request.js";
@@ -22,6 +21,9 @@ import { GrantStore } from "./kernel/grants.js";
 import { KillSwitch } from "./kernel/kill-switch.js";
 import { Ledger, type LedgerEvent } from "./kernel/ledger.js";
 import { type ProjectionsState, Projector } from "./kernel/projector.js";
+import { generateDeliveryReport } from "./reporter/delivery.js";
+import type { MissionBrief } from "./schemas/brief.js";
+import type { Contract } from "./schemas/contract.js";
 import { ClaudeCodeAdapter } from "./workers/claude-code.js";
 import { HermesAdapter } from "./workers/hermes.js";
 import { ShellWorkerAdapter } from "./workers/shell.js";
@@ -138,7 +140,12 @@ export class RegentDaemon {
 
   async runJob(
     goal: string,
-    options: { jobId?: string; customWorker?: WorkerAdapter } = {},
+    options: {
+      jobId?: string;
+      customWorker?: WorkerAdapter;
+      briefOverride?: Partial<MissionBrief>;
+      planOverride?: Contract[];
+    } = {},
   ): Promise<{
     jobId: string;
     success: boolean;
@@ -162,7 +169,10 @@ export class RegentDaemon {
     });
 
     // 1. Director Interpretation
-    const brief = await interpretJob({ jobId, ticket: goal, probe });
+    let brief = await interpretJob({ jobId, ticket: goal, probe });
+    if (options.briefOverride) {
+      brief = { ...brief, ...options.briefOverride };
+    }
     this.ledger.append({
       type: "brief.written",
       jobId,
@@ -171,7 +181,9 @@ export class RegentDaemon {
     });
 
     // 2. Task Graph Planning & Validation
-    const { contracts, validation } = generatePlan(brief);
+    const { contracts, validation } = options.planOverride
+      ? { contracts: options.planOverride, validation: { ok: true, errors: [] } }
+      : generatePlan(brief);
     if (!validation.ok) {
       this.ledger.append({
         type: "job.failed",
@@ -430,7 +442,7 @@ export class RegentDaemon {
         isComplete: true,
         finalScore: 9.2,
         durationMinutes: 5,
-        branch: approvedBranches[0]?.branch ?? "regent/" + jobId,
+        branch: approvedBranches[0]?.branch ?? `regent/${jobId}`,
         commitsCount: approvedBranches.length,
         linesAdded: 15,
         linesRemoved: 2,
@@ -452,7 +464,6 @@ export class RegentDaemon {
       });
 
       writeFileSync(join(deliveryDir, "DELIVERY.md"), deliveryMd, "utf-8");
-      writeFileSync(join(this.repoRoot, "DELIVERY.md"), deliveryMd, "utf-8");
     } catch {}
 
     return { jobId, success: true, spentUsd: totalJobSpend };

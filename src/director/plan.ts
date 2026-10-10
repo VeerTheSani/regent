@@ -18,8 +18,12 @@ export function generatePlan(
   brief: MissionBrief,
   _options: PlanOptions = {},
 ): { contracts: Contract[]; validation: PlanValidationResult } {
-  // If brief already has a standard plan shape or is generated
-  // Baseline contract decomposition satisfying brief DoD items
+  const dod1 = brief.definitionOfDone.find((d) => d.id === "DOD-1");
+  const dod2 = brief.definitionOfDone.find((d) => d.id === "DOD-2");
+
+  const typecheckCmd = dod2?.command ?? "npm run typecheck";
+  const testCmd = dod1?.command ?? "npm test";
+
   const contracts: Contract[] = [
     {
       id: "CTR-01",
@@ -38,7 +42,7 @@ export function generatePlan(
           {
             id: "gate-typecheck",
             kind: "command",
-            spec: { cmd: "npm run typecheck" },
+            spec: { cmd: typecheckCmd },
           },
         ],
         dodRefs: ["DOD-2"],
@@ -71,7 +75,7 @@ export function generatePlan(
           {
             id: "gate-test",
             kind: "command",
-            spec: { cmd: "npm test" },
+            spec: { cmd: testCmd },
           },
         ],
         dodRefs: ["DOD-1"],

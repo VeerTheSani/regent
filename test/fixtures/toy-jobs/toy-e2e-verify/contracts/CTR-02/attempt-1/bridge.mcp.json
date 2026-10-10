@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "regent": {
+      "type": "http",
+      "url": "http://127.0.0.1:7781/mcp?job=toy-e2e-verify&ctr=CTR-02&attempt=1",
+      "headers": {
+        "Authorization": "Bearer internal"
+      }
+    }
+  }
+}
