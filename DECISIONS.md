@@ -84,3 +84,15 @@
 ### D14: 256-Bit Bearer Token & Windows ACL
 - **Decision**: On first boot, Regent generates a cryptographic 256-bit hex token (`crypto.randomBytes(32).toString("hex")`) saved to `%USERPROFILE%\.regent\token`.
 - **Windows Security Note**: On Windows 11, `%USERPROFILE%\.regent` inherits the user's private ACL (`NT AUTHORITY\SYSTEM` and `<User>` have Full Control, other users denied). All attempt configs referencing the token are created within this user boundary, bound exclusively to loopback (`127.0.0.1:7781`).
+
+## M4: Workspace, Worktrees & Evidence Harness
+
+### D15: Git Ref Hierarchy and Integration Branch Naming
+- **Observation**: In Git ref storage, a branch name cannot be a prefix directory of another branch name (`fatal: cannot lock ref 'refs/heads/regent/job': 'refs/heads/regent/job/ctr-1-a1' exists`).
+- **Decision**: Integration branches are named `regent/<jobId>/integration`, coexisting cleanly alongside attempt branches within the `refs/heads/regent/<jobId>/` hierarchy.
+
+### D16: Deterministic Visual Analysis without Native Dependencies
+- **Decision**: Used pure TypeScript luminance computation and color binning (`pngjs` + `pixelmatch`) for blank frame detection and pixel diffing, eliminating native C++ dependencies like node-canvas.
+
+### D17: Desktop Capture via PowerShell DPI-Aware Win32 Interop
+- **Decision**: Window and screen captures execute through `capture-window.ps1` utilizing `SetProcessDPIAware()`, `GetWindowRect()`, and `PrintWindow(PW_RENDERFULLCONTENT)` with fallback to `CopyFromScreen()`.
