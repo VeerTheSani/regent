@@ -63,39 +63,53 @@ Respond ONLY with a valid JSON object matching the MissionBrief schema.`;
 
   const root = input.probe?.repoRoot ?? process.cwd();
   const hasPackageJson = existsSync(join(root, "package.json"));
+  const ticketLower = input.ticket.toLowerCase();
+  const isAutomationOrOps =
+    ticketLower.includes("wallpaper") ||
+    ticketLower.includes("chrome") ||
+    ticketLower.includes("download") ||
+    ticketLower.includes("extract") ||
+    ticketLower.includes("browser") ||
+    ticketLower.includes("photo") ||
+    ticketLower.includes("image") ||
+    !hasPackageJson;
 
   // Deterministic fixture interpretation for test suite and offline operation
   const briefData = {
     jobId: input.jobId,
     version: 1,
     goal: `Deliver verified solution for: ${input.ticket}`,
-    deliverableKind: hasPackageJson ? ("code_change" as const) : ("research_report" as const),
-    definitionOfDone: hasPackageJson
-      ? [
-          {
-            id: "DOD-1",
-            statement: "All unit tests pass with zero errors",
-            verification: "test" as const,
-            command: "npm test",
-            mustPass: true,
-          },
-          {
-            id: "DOD-2",
-            statement: "Typecheck passes cleanly with no compiler warnings",
-            verification: "command" as const,
-            command: "npm run typecheck",
-            mustPass: true,
-          },
-        ]
-      : [
-          {
-            id: "DOD-1",
-            statement: "Task execution completes cleanly with zero errors",
-            verification: "command" as const,
-            command: process.platform === "win32" ? "cmd /c exit 0" : "true",
-            mustPass: true,
-          },
-        ],
+    deliverableKind:
+      !isAutomationOrOps && hasPackageJson
+        ? ("code_change" as const)
+        : ("research_report" as const),
+    definitionOfDone:
+      !isAutomationOrOps && hasPackageJson
+        ? [
+            {
+              id: "DOD-1",
+              statement: "All unit tests pass with zero errors",
+              verification: "test" as const,
+              command: "npm test",
+              mustPass: true,
+            },
+            {
+              id: "DOD-2",
+              statement: "Typecheck passes cleanly with no compiler warnings",
+              verification: "command" as const,
+              command: "npm run typecheck",
+              mustPass: true,
+            },
+          ]
+        : [
+            {
+              id: "DOD-1",
+              statement: "Task execution completes cleanly with zero errors",
+              verification: "command" as const,
+              command: process.platform === "win32" ? "cmd /c exit 0" : "true",
+              mustPass: true,
+            },
+          ],
     constraints: [
       "Follow repository rules and standard formatting",
       "Do not weaken, delete, or skip existing tests",

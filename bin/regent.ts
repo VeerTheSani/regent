@@ -112,4 +112,13 @@ program
     await new Promise<void>((resolve) => child.on("close", () => resolve()));
   });
 
+program.argument("[query...]", "Chat query or question").action(async (queryParts: string[]) => {
+  if (queryParts && queryParts.length > 0) {
+    const query = queryParts.join(" ");
+    console.log(`[regent] Launching chat console for query: "${query}"\n`);
+    const { startChatSession } = await import("../src/operator/chat.js");
+    await startChatSession();
+  }
+});
+
 program.parse(process.argv);

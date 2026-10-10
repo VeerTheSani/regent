@@ -52,7 +52,7 @@ export function generatePlan(
               },
             },
           ],
-          dodRefs: ["DOD-1"],
+          dodRefs: brief.definitionOfDone.map((d) => d.id),
           rubric: "ops",
           visualTargets: [],
         },
