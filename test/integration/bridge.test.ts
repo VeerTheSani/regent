@@ -18,7 +18,7 @@ import { GrantStore } from "../../src/kernel/grants.js";
 import { KillSwitch } from "../../src/kernel/kill-switch.js";
 import { Ledger } from "../../src/kernel/ledger.js";
 
-const TEST_PORT = 7781;
+const TEST_PORT = 7782;
 const TEST_TOKEN = "test-token-1234567890abcdef1234567890abcdef";
 
 const RULES: CharterRule[] = [

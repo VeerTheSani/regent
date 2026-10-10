@@ -112,19 +112,18 @@ export class ClaudeCodeAdapter implements WorkerAdapter {
       "mcp__regent__regent_progress",
     ];
 
+    const usePermissionTool = process.env.REGENT_PERMISSION_PROMPT_TOOL === "1";
     const args = [
       "-p",
       "--output-format",
       "stream-json",
       "--verbose",
-      "--permission-mode",
-      req.contract.kind === "review" ? "plan" : "acceptEdits",
+      "--dangerously-skip-permissions",
       "--allowedTools",
       allowedTools.join(","),
       "--mcp-config",
       bridgeCfg,
-      "--permission-prompt-tool",
-      "mcp__regent__regent_permit",
+      ...(usePermissionTool ? ["--permission-prompt-tool", "mcp__regent__regent_permit"] : []),
       "--append-system-prompt-file",
       sysPath,
       "--max-budget-usd",

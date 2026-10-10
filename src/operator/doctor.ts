@@ -147,13 +147,15 @@ export async function runDiagnostics(): Promise<DiagnosticCheck[]> {
 
   // 10. API Keys
   const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
-  const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
+  const openRouterKey =
+    process.env.OPENROUTER_API_KEY || (await import("../config/keys.js")).getOpenRouterKey();
+  const hasOpenRouter = Boolean(openRouterKey);
   checks.push({
-    name: "API Keys (Environment)",
+    name: "API Keys (Environment / Hermes)",
     category: "secrets",
     status: hasAnthropic || hasOpenRouter ? "ok" : "warn",
-    detail: `Anthropic: ${hasAnthropic ? "set" : "not set"}, OpenRouter: ${
-      hasOpenRouter ? "set" : "not set"
+    detail: `Anthropic: ${hasAnthropic ? "set" : "not set"}, OpenRouter (Gemini): ${
+      hasOpenRouter ? "configured" : "not set"
     }`,
   });
 

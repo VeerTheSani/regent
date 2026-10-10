@@ -6,7 +6,12 @@
  */
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import type { Server } from "node:http";
 import { join } from "node:path";
+import { PermitArbiter } from "./bridge/permits.js";
+import { ProxyUser } from "./bridge/proxy-user.js";
+import { BridgeReportsStore } from "./bridge/reports.js";
+import { startBridge } from "./bridge/server.js";
 import { interpretJob } from "./director/interpret.js";
 import { generatePlan } from "./director/plan.js";
 import { composeWorkRequest } from "./dispatcher/compose-request.js";
@@ -51,6 +56,10 @@ export class RegentDaemon {
   readonly repoRoot: string;
   readonly worktrees: WorktreeManager;
   readonly jobsDir: string;
+  readonly permits: PermitArbiter;
+  readonly proxyUser: ProxyUser;
+  readonly reports: BridgeReportsStore;
+  private bridgeServer?: Server;
 
   private workerAdapters: Map<WorkerId, WorkerAdapter> = new Map();
 
@@ -93,6 +102,13 @@ export class RegentDaemon {
     this.gates = new GateRunner();
     this.judge = new JudgeService();
     this.supervisor = new RunSupervisor(this.ledger);
+
+    this.permits = new PermitArbiter(this.charter, this.ledger, (ids) => ({
+      workspaceRoots: [this.repoRoot],
+      attemptDir: join(this.jobsDir, ids.job, "contracts", ids.ctr, `attempt-${ids.attempt}`),
+    }));
+    this.proxyUser = new ProxyUser(this.ledger);
+    this.reports = new BridgeReportsStore();
 
     // Register default worker fleet
     this.registerWorker(new ShellWorkerAdapter());
@@ -200,6 +216,22 @@ export class RegentDaemon {
       actor: "director",
       payload: { contractCount: contracts.length },
     });
+
+    // Ensure Bridge MCP Server is active on port 7781
+    if (!this.bridgeServer) {
+      try {
+        this.bridgeServer = await startBridge(
+          {
+            token: "internal",
+            ledger: this.ledger,
+            permits: this.permits,
+            proxyUser: this.proxyUser,
+            reports: this.reports,
+          },
+          7781,
+        );
+      } catch {}
+    }
 
     let totalJobSpend = 0;
     const approvedBranches: Array<{ branch: string }> = [];

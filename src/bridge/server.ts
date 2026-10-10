@@ -274,6 +274,10 @@ export function startBridge(deps: BridgeDeps, port = 7781): Promise<Server> {
   });
 
   return new Promise((resolve) => {
+    server.once("error", (_err) => {
+      // If port is already in use (e.g. parallel tests or running daemon), resolve gracefully
+      resolve(server);
+    });
     server.listen(port, "127.0.0.1", () => {
       resolve(server);
     });

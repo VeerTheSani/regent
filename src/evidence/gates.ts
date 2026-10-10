@@ -57,9 +57,17 @@ export class GateRunner {
         const timeoutMs = Number(gate.spec.timeoutSec ?? 600) * 1000;
 
         const isWindows = process.platform === "win32";
-        const shellCmd = isWindows ? "bash.exe" : "bash";
+        const gitBash = "C:\\Program Files\\Git\\bin\\bash.exe";
+        const shellCmd = isWindows
+          ? existsSync(gitBash)
+            ? gitBash
+            : process.env.ComSpec || "cmd.exe"
+          : "bash";
+        const shellArgs = shellCmd.toLowerCase().endsWith("cmd.exe")
+          ? ["/d", "/s", "/c", cmd]
+          : ["-c", cmd];
 
-        const child = spawn(shellCmd, ["-c", cmd], {
+        const child = spawn(shellCmd, shellArgs, {
           cwd: ctx.cwd,
           windowsHide: true,
         });
