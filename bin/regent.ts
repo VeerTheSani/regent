@@ -78,6 +78,14 @@ program
   });
 
 program
+  .command("chat")
+  .description("Start an interactive chat session with Regent powered by Gemini 3.8")
+  .action(async () => {
+    const { startChatSession } = await import("../src/operator/chat.js");
+    await startChatSession();
+  });
+
+program
   .command("ui")
   .alias("dashboard")
   .description("Start the Regent Web Dashboard server")
