@@ -4,25 +4,27 @@ All notable changes to Regent will be documented in this file.
 
 ## [Unreleased]
 
+### Added - M7: Operator Onboarding, Diagnostics & Consultant Selection
+- Implemented `src/operator/doctor.ts` (`regent doctor` CLI):
+  - Comprehensive dependency diagnostic probing Node 24, Git, Claude Code, Hermes, VS Code, Chrome, port 7780/7781 bindings, and API keys.
+- Implemented `src/operator/setup.ts` (`regent setup` CLI):
+  - Operator onboarding writing `~/.regent/config.yaml`, `charter.yaml`, and `operator.yaml`.
+- Implemented profile setup scripts:
+  - `scripts/setup-hermes-profile.ps1`: Registers Regent Bridge MCP on dedicated `regent` profile.
+  - `scripts/setup-vscode-profile.ps1`: Configures Regent profile with Bridge MCP definition.
+  - `scripts/setup-chrome.ps1`: Launches dedicated Chrome instance on port 9222.
+- Implemented consultant selection:
+  - `scripts/pick-consultants.ts`: Model selection from OpenRouter enforcing $\ge 1$ non-Anthropic family.
+- Acceptance unit tests in `test/unit/doctor.test.ts`, `test/unit/setup.test.ts`, and `test/unit/consultants.test.ts` (105 tests passed across 21 test files).
+
 ### Added - M6: Dispatcher, Strategy Ladder & Toy Repo Orchestration
-- Implemented `src/dispatcher/select-worker.ts`:
-  - Worker capability scoring per contract kind (from 05 §1).
-  - Thompson sampling over learned success rates via Beta distribution variates (`sampleBeta`).
-- Implemented `src/dispatcher/ladder.ts`:
-  - Strategy Ladder anti-loop directives (R1 through R7).
-- Implemented `src/dispatcher/compose-request.ts`:
-  - Structured `WorkRequest` assembly and prompt template rendering.
-- Implemented `src/dispatcher/supervise.ts`:
-  - Active attempt supervision: wall-clock ceiling, stall detection (steer -> kill), budget breach monitoring.
-- Implemented `src/daemon.ts`:
-  - Complete orchestration daemon connecting ledger, bridge, worktrees, gates, judge, and workers.
-  - Startup crash recovery identifying interrupted attempts.
-- Implemented CLI entry points in `src/operator/cli-commands.ts` and `bin/regent.ts` (`job`, `status`, `stop`, `watch`).
-- Created target `test/fixtures/toy-repo/` with deliberate unit test failure in `add.ts`.
-- Integration test suite in `test/integration/dispatcher-e2e.test.ts` (3 tests passed):
-  - Scripted worker full DAG progression: attempt 1 fails gates, attempt 2 revises, attempt 3 approves, job reaches `DONE`.
-  - Strategy ladder progression (R1 -> R2 -> R3) terminating at attempt ceiling without infinite looping.
-  - Kill test verifying process tree termination.
+- Implemented `src/dispatcher/select-worker.ts`: Worker capability scoring and Thompson sampling.
+- Implemented `src/dispatcher/ladder.ts`: Strategy Ladder anti-loop directives (R1 through R7).
+- Implemented `src/dispatcher/compose-request.ts`: Structured `WorkRequest` assembly and prompt rendering.
+- Implemented `src/dispatcher/supervise.ts`: Active attempt supervision.
+- Implemented `src/daemon.ts`: Complete orchestration daemon with boot recovery.
+- Implemented CLI entry points in `src/operator/cli-commands.ts` and `bin/regent.ts`.
+- Created target `test/fixtures/toy-repo/` and verified full DAG completion in `test/integration/dispatcher-e2e.test.ts`.
 
 ### Added - M5: Director, Planner, Validator & Judge
 - Implemented Zod schemas in `src/schemas/` (`MissionBrief`, `Contract`, `Verdict`, `GraphPatch`).

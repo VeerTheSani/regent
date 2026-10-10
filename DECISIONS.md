@@ -124,3 +124,11 @@
 
 ### D24: Orchestration Daemon Crash Recovery
 - **Decision**: During daemon boot, existing ledger events are replayed to reconstruct state projections. Any in-flight `attempt.started` lacking an `attempt.finished` is marked as `attempt.interrupted` to prevent duplicate concurrent runs.
+
+## M7: Operator Onboarding, Diagnostics & Consultant Selection
+
+### D25: System Diagnostics & Doctor Health Checking
+- **Decision**: `runDiagnostics()` probes live binary paths, execution response codes, network ports, and Chrome CDP connectivity, outputting a structured diagnostic table.
+
+### D26: Consultant Diversity Constraint
+- **Decision**: `pickConsultants()` enforces including at least one non-Anthropic model family (e.g. Meta Llama 3.3, Google Gemini) to avoid vendor monoculture when evaluating attempts.
