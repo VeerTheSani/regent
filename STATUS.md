@@ -1,14 +1,17 @@
 # Regent Build Status
 
-Last updated: M9 Delivery, final acceptance, retrospectives completed and verified.
+Last updated: Complete system delivery — all milestones M0 through M10 verified GREEN.
 
-## Current Milestone
-- **Active Milestone**: M9 — Delivery, final acceptance, retrospectives (COMPLETED)
-- **Next Milestone**: M10 — Hardening & self-check (per ordering: M0 -> M2 -> M1 -> M3..M10)
+## Overall System Status
+- **Milestones**: M0 through M10 **ALL GREEN (100% Complete)**
+- **Automated Tests**: **124 passed (124)** across 28 test files in 6.7s
+- **Linter & Types**: Biome Clean (0 errors), Strict NodeNext TypeScript (0 errors)
+- **Live Spend**: **$0.00**
+- **Blockers**: **None**
 
 ## Milestone Progress Table
 
-| Milestone | Title | Status | Tests Passed | Live Cost (USD) | Notes / Blockers |
+| Milestone | Title | Status | Tests Passed | Live Cost (USD) | Notes / Verification Receipts |
 |---|---|---|---|---|---|
 | **M0** | Scaffold | **GREEN** | 1 unit test | $0.00 | Toolchain verified: typecheck, lint, version, test |
 | **M2** | Worker adapters + PROBES | **GREEN** | 8 unit tests | $0.00 | Probes P1–P15 executed/recorded, adapters & parsers verified |
@@ -20,35 +23,19 @@ Last updated: M9 Delivery, final acceptance, retrospectives completed and verifi
 | **M7** | Proxy-User, permissions loop, live workers | **GREEN** | 3 unit tests | $0.00 | Profile setup scripts, regent doctor diagnostics, operator setup onboarding, consultant selection |
 | **M8** | Browser operator, desktop capture, dashboard | **GREEN** | 7 tests | $0.00 | Playwright browser operator, form classification & charter, dashboard UI & SSE, notifications |
 | **M9** | Delivery, final acceptance, retrospectives | **GREEN** | 8 unit tests | $0.00 | Delivery report generator, final acceptance judge, retrospectives, calibration, Aikami profile |
-| **M10** | Hardening & self-check | In Progress | 0 | $0.00 | Secret leak audit, prompt injection resistance, recovery resilience, load concurrency, docs |
+| **M10** | Hardening & self-check | **GREEN** | 4 integration tests | $0.00 | Secrets leak audit (0 hits), prompt injection defense, crash recovery, 20-contract load test |
 
-## Acceptance Verification (M9)
-- **Delivery Report Generator**:
-  - Rendered complete `DELIVERY.md` with Definition-of-Done table, evidence links, costs, caveats (`test/unit/delivery.test.ts` PASS).
-  - Enforced strict honesty: throws an error if any DoD claimed verified or judged lacks a verifiable `evidenceLink`.
-  - Partial deliverables automatically marked `PARTIAL`.
-- **Final Acceptance Evaluator**:
-  - Evaluated job against MissionBrief DoD items, issuing `APPROVE` when verified or `REVISE` with cited blockers when items are missing (`test/unit/final-acceptance.test.ts` PASS).
-- **Durable Memory & Retrospectives**:
-  - `WorkerStatsTracker` tracks run counts, costs, durations, and applies exponential weekly decay (`test/unit/retrospective.test.ts` PASS).
-  - `LessonStore` appends and queries scoped lessons in `~/.regent/memory/lessons.jsonl`.
-  - `analyzeJobRetrospective` extracts durable insights from repeated gate failures or ladder climbs.
-- **Aikami Project Profile**:
-  - Configured at `~/.regent/memory/projects/aikami.yaml` with verified task scripts.
-- **Total Suite Test Count**: **120 passed (120)** across 27 test files in 6.41s.
+## Acceptance Verification Summary
+1. **Secrets Security**: Planted secret audit confirmed 0 plaintext hits across all attempt folders and transcripts (`test/integration/hardening.test.ts` PASS).
+2. **Prompt-Injection Defense**: Untrusted content attempting charter bypass flagged as `tainted` and blocked from execution (`test/integration/hardening.test.ts` PASS).
+3. **Crash Recovery Resilience**: Reopened daemon detects interrupted attempts and preserves idempotency on resume (`test/integration/hardening.test.ts` PASS).
+4. **Concurrency Stress**: 20 concurrent contracts across 3 worker queues processed with zero SQLite corruption or sequence gaps (`test/integration/hardening.test.ts` PASS).
+5. **End-to-End Delivery Proof**: `regent job` executed on toy repo, generating verified `DELIVERY.md`.
+6. **Executive Documentation**: Complete architectural and operator handbook authored in `README.md`.
 
 ## Financial Accounting
-- **Total Spend So Far**: $0.00
+- **Total Spend Across All Milestones**: **$0.00**
 - **Live Call Cap (`REGENT_LIVE_MAX_USD`)**: $1.00 (default)
 
 ## Blockers
-- None at M9.
-
-## What's Next
-1. Commit M9 to git on `main` (`M9: Delivery, final acceptance, retrospectives, Aikami profile`) and push to GitHub.
-2. Advance to **M10 — Hardening & self-check**:
-   - Secrets leakage audit across attempt folders and logs.
-   - Prompt-injection resistance test.
-   - Mid-job crash and recovery resumption test.
-   - Parallel multi-worker load concurrency test.
-   - Comprehensive professional documentation with architectural diagrams, visual layout, and operator quick start.
+- **None.** The system is complete, fully tested, and ready for operator use.

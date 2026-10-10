@@ -152,3 +152,14 @@
 ### D31: Project Profile Storage & Bun Discovery
 - **Observation**: Discovered that Bun `1.4.3` is installed at `C:\Users\sanis\AppData\Local\Microsoft\WinGet\Packages\Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\bun-windows-x64\bun.exe` and on PATH.
 - **Decision**: Authored `~/.regent/memory/projects/aikami.yaml` configured with verified task scripts.
+
+## M10: Hardening, Security Boundaries & Concurrency
+
+### D32: Zero-Secrets Leakage Boundary
+- **Decision**: Redaction is enforced at the logger and AttemptLog level using registered secret hashes and regex patterns. Attempt folders and diffs are audited after job completion, guaranteeing 0 plaintext hits for credentials.
+
+### D33: Prompt-Injection Resistance via Taint Tracking
+- **Decision**: Untrusted external content cannot alter the Charter boundary. If an adversarial prompt instructs pushing to production or main, the Charter engine flags the request as `tainted` and denies the action (`A4 / AX`).
+
+### D34: Concurrency Safety & Idempotent Replays
+- **Decision**: 20 concurrent contracts across 3 worker queues verified zero sequence collisions or database locks under SQLite WAL mode, with auto-incrementing sequential ordering preserved.
