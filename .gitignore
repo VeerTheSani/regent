@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.local.*
+.regent*
+*.log
+coverage/
+.DS_Store
+Thumbs.db

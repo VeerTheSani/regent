@@ -1,0 +1,24 @@
+version: 1
+rules:
+  # --- forbidden ---
+  - { level: AX, action: "fs.*",       when: { pathMatches: ["~/.regent/charter.yaml", "~/.regent/STOP", "**/secrets/**"] } }
+  - { level: AX, action: "shell.exec", when: { commandMatches: ["(?i)\\bformat\\s+[a-z]:", "(?i)rm\\s+-rf\\s+/(\\s|$)", "(?i)Remove-Item.*-Recurse.*C:\\\\(Windows|Users)\\\\?$", "(?i)reg\\s+delete\\s+HKLM"] } }
+  # --- high stakes ---
+  - { level: A4, action: "git.push",   when: { branchMatches: ["main", "master", "release/*"] } }
+  - { level: A4, action: "deploy.*" }
+  - { level: A4, action: "browser.submit", when: { formKind: ["payment", "message", "account", "legal"] } }
+  - { level: A4, action: "message.send" }
+  - { level: A4, action: "shell.exec", when: { commandMatches: ["(?i)wrangler\\s+(deploy|publish)", "(?i)npm\\s+publish", "(?i)gh\\s+release\\s+create"] } }
+  # --- external reversible ---
+  - { level: A3, action: "git.push" }
+  - { level: A3, action: "pr.open" }
+  - { level: A3, action: "browser.submit" }
+  - { level: A3, action: "browser.login" }
+  # --- local ---
+  - { level: A1, action: "fs.*",       when: { insideAttemptDir: true } }
+  - { level: A2, action: "fs.*",       when: { insideWorkspace: true } }
+  - { level: A1, action: "shell.exec", when: { cwdInsideAttemptDir: true } }
+  - { level: A2, action: "git.merge",  when: { targetBranchMatches: ["regent/*"] } }
+  - { level: A0, action: "fs.read" }
+  - { level: A0, action: "browser.navigate" }
+  - { level: A0, action: "net.get" }

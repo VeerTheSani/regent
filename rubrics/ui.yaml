@@ -1,0 +1,28 @@
+kind: ui
+dimensions:
+  - id: functional
+    weight: 0.35
+    anchors:
+      10: "Every acceptance item demonstrably works in the screenshots/tests; edge cases handled"
+      7: "Main path works; one secondary item missing or unverified"
+      4: "Main path partially works or only claimed, not shown"
+      1: "Does not work / not present"
+  - id: visual_fidelity
+    weight: 0.25
+    anchors:
+      10: "Indistinguishable from a designer's implementation; consistent tokens, spacing, typography"
+      7: "Correct layout; minor token/spacing deviations"
+      4: "Noticeable inconsistencies with the rest of the app"
+      1: "Broken layout, overlapping/clipped elements, wrong theme"
+  - id: code_quality
+    weight: 0.2
+  - id: robustness
+    weight: 0.1
+  - id: scope_discipline
+    weight: 0.1
+blockers:
+  - "Requirement claimed but not visible in evidence"
+  - "Type escape (any, @ts-ignore, as unknown as) introduced without justification"
+  - "Test weakened, skipped, or deleted to make it pass"
+  - "Guard baseline / waiver / lint config changed to pass a check"
+  - "Accessibility: interactive control without label or keyboard access"

@@ -1,0 +1,46 @@
+{
+  "name": "regent",
+  "version": "0.0.0",
+  "description": "Autonomous local orchestrator daemon and CLI",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "regent": "./bin/regent.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "tsx src/daemon.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "commander": "^13.1.0",
+    "cross-spawn": "^7.0.6",
+    "picomatch": "^4.0.2",
+    "pixelmatch": "^7.1.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "playwright": "^1.50.1",
+    "pngjs": "^7.0.0",
+    "tree-kill": "^1.2.2",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/cross-spawn": "^6.0.6",
+    "@types/node": "^22.13.10",
+    "@types/picomatch": "^4.0.3",
+    "@types/pngjs": "^6.0.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}

@@ -1,0 +1,8 @@
+kind: final_acceptance
+dimensions:
+  - id: quality
+    weight: 1.0
+    anchors:
+      10: Excellent
+      5: Acceptable
+      1: Failed
