@@ -267,6 +267,20 @@ export class RuneInterpreter {
     }
 
     switch (cmd) {
+      // --- BROWSER & MEDIA PRIMITIVES ---
+      case "browser.open":
+      case "open": {
+        const url = args.join(" ");
+        const out = await this.runtime.openUrl(url);
+        return out || `Opened ${url}`;
+      }
+      case "media.play":
+      case "audio.play": {
+        const query = args.join(" ");
+        const out = await this.runtime.playMedia(query);
+        return out || `Playing ${query}`;
+      }
+
       // --- LOW-LEVEL KERNEL: Hardware Mouse ---
       case "mouse.move": {
         const x = Number.parseFloat(args[0]);

@@ -3,8 +3,8 @@
  *
  * RUNE (Regent Unified Native Execution) - Full-Metal System Runtime.
  * Provides direct, zero-overhead primitives for Windows 11 host control:
- * Desktop wallpaper, screenshot, notifications, clipboard, process execution,
- * HTTP fetching, and filesystem operations.
+ * ShellExecute URL/media launcher, desktop wallpaper, screenshot, notifications,
+ * clipboard, process execution, HTTP fetching, and filesystem operations.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,16 +14,22 @@ import { RuneCompiler } from "./compiler.js";
 
 export class RuneRuntime {
   private compiler = new RuneCompiler();
+
   /**
    * Execute a shell command natively and return trimmed stdout.
+   * Uses cross-spawn with proper Windows argument handling.
    */
   async exec(command: string): Promise<string> {
     return new Promise((res, rej) => {
       const isWin = process.platform === "win32";
       const shell = isWin ? process.env.ComSpec || "cmd.exe" : "/bin/bash";
-      const args = isWin ? ["/d", "/s", "/c", command] : ["-c", command];
 
-      const child = spawn(shell, args, { stdio: ["ignore", "pipe", "pipe"] });
+      // On Windows, pass command directly to cmd /c without extra nested quotes
+      const child = spawn(shell, ["/c", command], {
+        stdio: ["ignore", "pipe", "pipe"],
+        windowsVerbatimArguments: true,
+      });
+
       let stdout = "";
       let stderr = "";
 
@@ -43,6 +49,41 @@ export class RuneRuntime {
       });
       child.on("error", rej);
     });
+  }
+
+  /**
+   * Open any URL, file, or protocol using native Windows ShellExecute (zero quote escaping).
+   */
+  async openUrl(target: string): Promise<string> {
+    const nativeCode = `
+using System;
+using System.Runtime.InteropServices;
+public class WinShellOpen {
+    [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+    public static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
+
+    public static void Main(string[] args) {
+        if (args.Length > 0) {
+            ShellExecute(IntPtr.Zero, "open", args[0], null, null, 1);
+            Console.WriteLine("OPENED:" + args[0]);
+        }
+    }
+}
+`;
+    const cleanTarget = target.trim().replace(/^["']|["']$/g, "");
+    return this.compiler.runNative(nativeCode, [cleanTarget]);
+  }
+
+  /**
+   * Play media or music stream by query or URL.
+   */
+  async playMedia(queryOrUrl: string, speed?: string): Promise<string> {
+    let url = queryOrUrl.trim().replace(/^["']|["']$/g, "");
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      const encoded = encodeURIComponent(queryOrUrl + (speed ? ` ${speed}` : ""));
+      url = `https://www.youtube.com/results?search_query=${encoded}`;
+    }
+    return this.openUrl(url);
   }
 
   /**
@@ -81,7 +122,8 @@ export class RuneRuntime {
    * Set Windows desktop wallpaper via Win32 SystemParametersInfo.
    */
   async setWallpaper(imagePath: string): Promise<boolean> {
-    const abs = resolve(imagePath);
+    const cleanPath = imagePath.trim().replace(/^["']|["']$/g, "");
+    const abs = resolve(cleanPath);
     if (!existsSync(abs)) {
       throw new Error(`Wallpaper file not found: ${abs}`);
     }
@@ -108,21 +150,32 @@ public class WinApiWallpaper {
    * Capture a full desktop screenshot to a PNG file.
    */
   async screenshot(destPath: string): Promise<string> {
-    const abs = resolve(destPath);
+    const cleanPath = destPath.trim().replace(/^["']|["']$/g, "");
+    const abs = resolve(cleanPath);
     const dir = dirname(abs);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
-    const psCommand = `
-Add-Type -AssemblyName System.Windows.Forms,System.Drawing;
-$bounds = [System.Windows.Forms.SystemInformation]::VirtualScreen;
-$bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height;
-$graphics = [System.Drawing.Graphics]::FromImage($bitmap);
-$graphics.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $bounds.Size);
-$bitmap.Save("${abs.replace(/\\/g, "\\\\")}", [System.Drawing.Imaging.ImageFormat]::Png);
-$graphics.Dispose();
-$bitmap.Dispose();
+    const nativeCode = `
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+public class WinScreenSnap {
+    public static void Main(string[] args) {
+        if (args.Length > 0) {
+            var b = SystemInformation.VirtualScreen;
+            using (var bmp = new Bitmap(b.Width, b.Height)) {
+                using (var g = Graphics.FromImage(bmp)) {
+                    g.CopyFromScreen(b.Left, b.Top, 0, 0, b.Size);
+                }
+                bmp.Save(args[0], ImageFormat.Png);
+            }
+            Console.WriteLine("SAVED:" + args[0]);
+        }
+    }
+}
 `;
-    await this.exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, " ")}"`);
+    await this.compiler.runNative(nativeCode, [abs]);
     return abs;
   }
 
@@ -131,10 +184,11 @@ $bitmap.Dispose();
    */
   async clipboard(text?: string): Promise<string> {
     if (text !== undefined) {
-      const b64 = Buffer.from(text, "utf-8").toString("base64");
+      const clean = text.trim().replace(/^["']|["']$/g, "");
+      const b64 = Buffer.from(clean, "utf-8").toString("base64");
       const psCommand = `[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${b64}')) | Set-Clipboard`;
       await this.exec(`powershell -NoProfile -Command "${psCommand}"`);
-      return text;
+      return clean;
     }
     return this.exec('powershell -NoProfile -Command "Get-Clipboard"');
   }
@@ -143,20 +197,21 @@ $bitmap.Dispose();
    * Display a native Windows desktop toast notification.
    */
   async notify(title: string, message: string): Promise<void> {
+    const cleanTitle = title.trim().replace(/^["']|["']$/g, "");
+    const cleanMsg = message.trim().replace(/^["']|["']$/g, "");
     const psCommand = `
 [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null;
 $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02);
 $texts = $template.GetElementsByTagName("text");
-$texts[0].AppendChild($template.CreateTextNode("${title.replace(/"/g, '`"')}")) | Out-Null;
-$texts[1].AppendChild($template.CreateTextNode("${message.replace(/"/g, '`"')}")) | Out-Null;
+$texts[0].AppendChild($template.CreateTextNode("${cleanTitle.replace(/"/g, '`"')}")) | Out-Null;
+$texts[1].AppendChild($template.CreateTextNode("${cleanMsg.replace(/"/g, '`"')}")) | Out-Null;
 $toast = [Windows.UI.Notifications.ToastNotification]::new($template);
 [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Rune Agent").Show($toast);
 `;
     try {
       await this.exec(`powershell -NoProfile -Command "${psCommand.replace(/\n/g, " ")}"`);
     } catch {
-      // Fallback to simple console beep/msg if toast runtime is disabled
-      console.log(`[Rune Notify] ${title}: ${message}`);
+      console.log(`[Rune Notify] ${cleanTitle}: ${cleanMsg}`);
     }
   }
 
@@ -164,6 +219,7 @@ $toast = [Windows.UI.Notifications.ToastNotification]::new($template);
    * Focus a desktop window by application title.
    */
   async focusWindow(titleSubstring: string): Promise<boolean> {
+    const clean = titleSubstring.trim().replace(/^["']|["']$/g, "");
     const psCommand = `
 Add-Type -TypeDefinition @"
 using System;
@@ -173,7 +229,7 @@ public class WinFocus {
     public static extern bool SetForegroundWindow(IntPtr hWnd);
 }
 "@;
-$p = Get-Process | Where-Object { $_.MainWindowTitle -like "*${titleSubstring}*" } | Select-Object -First 1;
+$p = Get-Process | Where-Object { $_.MainWindowTitle -like "*${clean}*" } | Select-Object -First 1;
 if ($p) { [WinFocus]::SetForegroundWindow($p.MainWindowHandle); Write-Output "FOUND" } else { Write-Output "NOT_FOUND" }
 `;
     const out = await this.exec(
@@ -186,14 +242,16 @@ if ($p) { [WinFocus]::SetForegroundWindow($p.MainWindowHandle); Write-Output "FO
    * Read file content.
    */
   readFile(path: string): string {
-    return readFileSync(resolve(path), "utf-8");
+    const clean = path.trim().replace(/^["']|["']$/g, "");
+    return readFileSync(resolve(clean), "utf-8");
   }
 
   /**
    * Write file content.
    */
   writeFile(path: string, content: string): void {
-    const abs = resolve(path);
+    const clean = path.trim().replace(/^["']|["']$/g, "");
+    const abs = resolve(clean);
     const dir = dirname(abs);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(abs, content, "utf-8");
