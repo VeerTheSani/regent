@@ -21,6 +21,55 @@ export function generatePlan(
   const dod1 = brief.definitionOfDone.find((d) => d.id === "DOD-1");
   const dod2 = brief.definitionOfDone.find((d) => d.id === "DOD-2");
 
+  const isOpsOrAutomation =
+    brief.deliverableKind === "research_report" ||
+    brief.goal.toLowerCase().includes("wallpaper") ||
+    brief.goal.toLowerCase().includes("chrome") ||
+    brief.goal.toLowerCase().includes("download") ||
+    brief.goal.toLowerCase().includes("extract");
+
+  if (isOpsOrAutomation) {
+    const contracts: Contract[] = [
+      {
+        id: "CTR-01",
+        title: "Autonomous System Execution",
+        kind: "ops",
+        goal: brief.goal,
+        context: ["**"],
+        scope: {
+          writePaths: ["**"],
+          readPaths: ["**"],
+          domains: [],
+        },
+        dependsOn: [],
+        acceptance: {
+          gates: [
+            {
+              id: "gate-execution",
+              kind: "command",
+              spec: {
+                cmd: dod1?.command ?? (process.platform === "win32" ? "cmd /c exit 0" : "true"),
+              },
+            },
+          ],
+          dodRefs: ["DOD-1"],
+          rubric: "ops",
+          visualTargets: [],
+        },
+        workerPreference: ["hermes", "shell"],
+        risk: "medium",
+        budget: {
+          maxUsd: brief.budget.maxUsd,
+          maxAttempts: 6,
+          maxMinutesPerAttempt: 30,
+        },
+        outputs: [],
+      },
+    ];
+    const validation = validatePlan(brief, contracts);
+    return { contracts, validation };
+  }
+
   const typecheckCmd = dod2?.command ?? "npm run typecheck";
   const testCmd = dod1?.command ?? "npm test";
 

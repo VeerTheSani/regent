@@ -81,7 +81,7 @@ export class HermesAdapter implements WorkerAdapter {
       req.contract.kind === "research"
         ? ["browser", "web"]
         : req.contract.kind === "ops"
-          ? ["terminal", "file"]
+          ? ["terminal", "file", "web", "browser"]
           : undefined;
 
     const args = [
