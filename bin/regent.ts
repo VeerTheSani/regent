@@ -77,4 +77,31 @@ program
     console.log(`Operator profile written to: ${paths.operatorPath}`);
   });
 
+program
+  .command("ui")
+  .alias("dashboard")
+  .description("Start the Regent Web Dashboard server")
+  .option("-p, --port <number>", "Dashboard port", "7780")
+  .action(async (opts) => {
+    const { startDashboardServer } = await import("../src/operator/dashboard/server.js");
+    const { RegentDaemon } = await import("../src/daemon.js");
+    const daemon = new RegentDaemon();
+    const port = Number(opts.port);
+    await startDashboardServer(daemon, port);
+    console.log(`[regent] Web Dashboard running at http://127.0.0.1:${port}`);
+    console.log(`[regent] Real-time event stream at http://127.0.0.1:${port}/api/events`);
+  });
+
+program
+  .command("test-gemini")
+  .description("Run a live multi-role test of google/gemini-3.8-flash (Director, Triage, Judge)")
+  .action(async () => {
+    const { spawn } = await import("node:child_process");
+    const child = spawn("npx", ["tsx", "scripts/test-gemini.ts"], {
+      stdio: "inherit",
+      shell: true,
+    });
+    await new Promise<void>((resolve) => child.on("close", () => resolve()));
+  });
+
 program.parse(process.argv);

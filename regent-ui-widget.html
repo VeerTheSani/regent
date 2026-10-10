@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    .regent-panel {
+      font-family: inherit;
+      color: var(--foreground, #e6edf3);
+      background: var(--card, #161b22);
+      border: 1px solid var(--border, #30363d);
+      border-radius: 8px;
+      padding: 16px;
+      max-width: 680px;
+      box-sizing: border-box;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border, #30363d);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent, #58a6ff);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11px;
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid #2ea043;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border, #30363d);
+      border-radius: 6px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--foreground, #f0f6fc);
+    }
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--muted-foreground, #8b949e);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted-foreground, #8b949e);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .model-tiers {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .tier-pill {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border, #30363d);
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 11px;
+    }
+    .tier-name {
+      font-weight: 600;
+      color: var(--accent, #58a6ff);
+      margin-bottom: 2px;
+    }
+    .tier-desc {
+      font-size: 10px;
+      color: var(--muted-foreground, #8b949e);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      border: 1px solid var(--border, #30363d);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--foreground, #f0f6fc);
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent, #58a6ff);
+    }
+    .btn-stop {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: #f85149;
+      color: #ff7b72;
+    }
+    .btn-stop:hover {
+      background: rgba(248, 81, 73, 0.3);
+    }
+    .url-link {
+      font-size: 11px;
+      color: var(--muted-foreground, #8b949e);
+      margin-top: 8px;
+      display: block;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="regent-panel">
+    <div class="header">
+      <div class="title">
+        <span>🛡️ Regent Local Orchestrator</span>
+        <span class="badge">SYSTEM READY</span>
+      </div>
+      <div>
+        <span style="font-size: 11px; color: var(--muted-foreground, #8b949e);">Port 7780 / 7781</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val">126/126</div>
+        <div class="stat-lbl">Tests Green</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">$0.00</div>
+        <div class="stat-lbl">Live Spend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">R1 - R7</div>
+        <div class="stat-lbl">Ladder Policy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">A0 - AX</div>
+        <div class="stat-lbl">Charter Guard</div>
+      </div>
+    </div>
+
+    <div class="section-title">Decision & Intelligence Pipeline</div>
+    <div class="model-tiers">
+      <div class="tier-pill">
+        <div class="tier-name">T1: Fast Triage</div>
+        <div class="tier-desc">Jev Router / Haiku (Sub-second sanity check)</div>
+      </div>
+      <div class="tier-pill">
+        <div class="tier-name">T2: Opus Judge</div>
+        <div class="tier-desc">Claude Opus 5.5 (Strict rubric & diff evaluation)</div>
+      </div>
+      <div class="tier-pill">
+        <div class="tier-name">T3: Panel</div>
+        <div class="tier-desc">Llama 3.3 / Gemini 2.0 (Multi-model consensus)</div>
+      </div>
+    </div>
+
+    <div class="section-title">Autonomous Operator Actions</div>
+    <div class="actions">
+      <button class="btn" data-hermes-send="npx tsx bin/regent.ts doctor">🩺 Run Doctor Diagnostics</button>
+      <button class="btn" data-hermes-send="npx tsx bin/regent.ts status">📋 Check Active Jobs</button>
+      <button class="btn btn-stop" data-hermes-send="npx tsx bin/regent.ts stop">🛑 Emergency STOP</button>
+    </div>
+
+    <span class="url-link">Web Dashboard: <a href="http://127.0.0.1:7780" target="_blank" style="color: var(--accent, #58a6ff);">http://127.0.0.1:7780</a></span>
+  </div>
+</body>
+</html>

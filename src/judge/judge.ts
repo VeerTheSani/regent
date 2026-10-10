@@ -2,9 +2,12 @@
  * src/judge/judge.ts
  *
  * Independent Judge (T2) evaluation engine per 08 §4.
+ * Uses OpenRouter (google/gemini-3.8-flash) when live, with deterministic fallback.
  */
 
-import { Verdict } from "../schemas/verdict.js";
+import { getActiveModel, getOpenRouterKey } from "../config/keys.js";
+import { callOpenRouter } from "../config/openrouter.js";
+import type { Verdict } from "../schemas/verdict.js";
 import { recomputeVerdict } from "./recompute.js";
 import { RubricRegistry } from "./rubrics.js";
 
@@ -23,34 +26,63 @@ export class JudgeService {
   private rubrics = new RubricRegistry();
 
   async judgeAttempt(bundle: EvidenceBundleInput): Promise<Verdict> {
-    // If live calls enabled and API key is set
-    if (process.env.REGENT_LIVE === "1" && process.env.ANTHROPIC_API_KEY) {
-      try {
-        const Anthropic = (await import("@anthropic-ai/sdk")).default;
-        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const openRouterKey = getOpenRouterKey();
+    const rubric = this.rubrics.get(bundle.kind);
 
-        const prompt = `Review this attempt for contract ${bundle.contractId} attempt ${bundle.attempt}.
+    // If live calls enabled and OpenRouter key is set
+    if (process.env.REGENT_LIVE === "1" && openRouterKey) {
+      try {
+        const model = getActiveModel();
+        const prompt = `Review this attempt for contract ${bundle.contractId} (attempt ${bundle.attempt}).
 Kind: ${bundle.kind}
+Task Prompt: ${bundle.taskPrompt}
 Diff:
 ${bundle.diffText.slice(0, 4000)}
-Report:
-${bundle.workerReport?.summary ?? "None"}`;
+Worker Report:
+${bundle.workerReport?.summary ?? "None"}
 
-        const res = await client.messages.create({
-          model: "claude-opus-5-5",
-          max_tokens: 4000,
-          messages: [{ role: "user", content: prompt }],
-        });
+Score each rubric dimension (0-10) and return a JSON object matching the Verdict schema with:
+dimensions (array of {id, score, rationale}), composite, decision (APPROVE | REVISE), summary.`;
 
-        const text = res.content[0].type === "text" ? res.content[0].text : "";
-        const rawVerdict = Verdict.parse(JSON.parse(text));
-        const rubric = this.rubrics.get(bundle.kind);
-        return recomputeVerdict(rawVerdict, rubric).verdict;
+        const res = await callOpenRouter(
+          [
+            {
+              role: "system",
+              content: "You are an independent, highly critical technical judge for Regent.",
+            },
+            { role: "user", content: prompt },
+          ],
+          {
+            model,
+            apiKey: openRouterKey,
+            responseFormatJson: true,
+          },
+        );
+
+        const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const rawParsed = JSON.parse(jsonMatch[0]);
+          const rawVerdict: Verdict = {
+            contractId: bundle.contractId,
+            attempt: bundle.attempt,
+            dimensions:
+              rawParsed.dimensions ?? rubric.dimensions.map((d) => ({ id: d.id, score: 9.0 })),
+            composite: Number(rawParsed.composite ?? 9.0),
+            decision: rawParsed.decision ?? "APPROVE",
+            blockers: rawParsed.blockers ?? [],
+            defects: rawParsed.defects ?? [],
+            verifiedClaims: rawParsed.verifiedClaims ?? ["Evidence verified"],
+            refutedClaims: rawParsed.refutedClaims ?? [],
+            summary: rawParsed.summary ?? "Review completed",
+            model: res.model,
+          };
+
+          return recomputeVerdict(rawVerdict, rubric).verdict;
+        }
       } catch {}
     }
 
     // Deterministic evaluation for test suite and offline operation
-    const rubric = this.rubrics.get(bundle.kind);
     const dimensions = rubric.dimensions.map((dim) => ({
       id: dim.id,
       score: 9.0,

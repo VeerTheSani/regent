@@ -2,9 +2,11 @@
  * src/director/interpret.ts
  *
  * Director interpretation: transforms a raw operator job ticket into a validated MissionBrief (03 §2).
- * Uses Anthropic SDK claude-opus-5-5 with adaptive thinking when live, or deterministic fixture fallback.
+ * Uses OpenRouter (google/gemini-3.8-flash) when live, with deterministic fallback.
  */
 
+import { getActiveModel, getOpenRouterKey } from "../config/keys.js";
+import { callOpenRouter } from "../config/openrouter.js";
 import { MissionBrief } from "../schemas/brief.js";
 import type { WorkspaceProbeResult } from "../workspace/probe.js";
 
@@ -16,26 +18,42 @@ export interface InterpretInput {
 }
 
 export async function interpretJob(input: InterpretInput): Promise<MissionBrief> {
-  // If live calls enabled and API key is set
-  if (process.env.REGENT_LIVE === "1" && process.env.ANTHROPIC_API_KEY) {
+  const openRouterKey = getOpenRouterKey();
+
+  // If live calls enabled and OpenRouter key is set
+  if (process.env.REGENT_LIVE === "1" && openRouterKey) {
     try {
-      const Anthropic = (await import("@anthropic-ai/sdk")).default;
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-      // Note: messages.create with JSON or parse helper
-      const prompt = `You are the Director of Regent. Produce a Mission Brief for job ${input.jobId}.
+      const model = getActiveModel();
+      const prompt = `You are the Director of Regent. Produce a JSON Mission Brief for job ${input.jobId}.
 Ticket: ${input.ticket}
-Root: ${input.probe?.repoRoot ?? "unknown"}`;
+Root: ${input.probe?.repoRoot ?? "unknown"}
+Respond ONLY with a valid JSON object matching the MissionBrief schema.`;
 
-      const res = await client.messages.create({
-        model: "claude-opus-5-5",
-        max_tokens: 4000,
-        messages: [{ role: "user", content: prompt }],
-      });
+      const res = await callOpenRouter(
+        [
+          {
+            role: "system",
+            content:
+              "You are the Director of Regent. You produce structured JSON MissionBrief objects.",
+          },
+          { role: "user", content: prompt },
+        ],
+        {
+          model,
+          apiKey: openRouterKey,
+          responseFormatJson: true,
+        },
+      );
 
-      const text = res.content[0].type === "text" ? res.content[0].text : "";
-      const parsed = JSON.parse(text);
-      return MissionBrief.parse(parsed);
+      const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return MissionBrief.parse({
+          jobId: input.jobId,
+          version: 1,
+          ...parsed,
+        });
+      }
     } catch {
       // Fall through to deterministic fixture
     }
